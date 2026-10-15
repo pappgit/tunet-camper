@@ -274,7 +274,8 @@ footer.foot{display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-betw
 .auth .msg{color:var(--warn)}
 .band h1 span{color:var(--yellow)}
 .acct{display:grid;gap:10px;margin-bottom:16px;max-width:520px;margin-left:auto}
-#login-code{font-size:24px!important;letter-spacing:.3em;font-variant-numeric:tabular-nums}
+.acct-pw{display:flex;gap:8px;flex-wrap:wrap}
+.card .acct-pw input{flex:1 1 200px;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:5px 8px;color:var(--ink)}
 </style>
 </head>
 <body>
@@ -646,9 +647,7 @@ footer.foot{display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-betw
     else if(a==='discard'){state=clone(saved);msg=''}
     else if(a==='acct'){acctOpen=!acctOpen}
     else if(a==='logout'){logout();return}
-    else if(a==='resend'){sendCode(true);return}
-    else if(a==='other-email'){screen='login';authMsg='';try{localStorage.removeItem('tunet-camper-code-sent')}catch(x){}render();return}
-    else if(a==='have-code'){var em=((document.getElementById('login-email')||{}).value||pendingEmail||'').trim().toLowerCase();if(!em){authMsg='Skriv inn e-postadressen du fikk koden til først.';render();return}pendingEmail=em;try{localStorage.setItem('tunet-camper-email',em)}catch(x){}screen='code';authMsg='';render();return}
+    else if(a==='forgot'){forgot();return}
     else if(a==='retry'){boot();return}
     else if(a==='save'){save();return}
     render();
@@ -666,6 +665,8 @@ footer.foot{display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-betw
   }
   function acctPanel(){
     return '<div class="acct card"><div><b>'+esc(memberName(userEmail))+'</b><div class="note">'+esc(userEmail)+'</div></div>'+
+      '<form id="pw-change" class="acct-pw"><input type="password" id="new-pw" autocomplete="new-password" minlength="8" placeholder="Nytt passord (minst 8 tegn)" aria-label="Nytt passord"><button class="btn small" type="submit">Bytt passord</button></form>'+
+      (pwMsg?'<div class="note">'+esc(pwMsg)+'</div>':'')+
       '<div><button class="btn small" data-act="logout">Logg ut</button></div></div>';
   }
 
@@ -675,53 +676,72 @@ footer.foot{display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-betw
     if(screen==='loading'){h+='<p>Laster planen …</p>'}
     else if(screen==='error'){h+='<h2>Fikk ikke kontakt</h2><p class="lead">'+esc(loadErr||'Kunne ikke hente planen.')+'</p><button class="btn primary" data-act="retry">Prøv igjen</button> <button class="btn" data-act="logout">Logg ut</button>'}
     else if(screen==='denied'){h+='<h2>Ingen tilgang</h2><p class="lead">Du er logget inn som <b>'+esc(userEmail)+'</b>, men denne e-postadressen har ikke tilgang til planen. Be Sverre om å legge deg til.</p><button class="btn" data-act="logout">Logg ut</button>'}
-    else if(screen==='code'){
-      h+='<h2>Skriv inn koden</h2><p class="lead">Vi har sendt en kode til <b>'+esc(pendingEmail)+'</b>. Sjekk innboksen, og eventuelt søppelpost.</p><form id="code-form" class="authform"><label>Kode fra e-posten<input type="text" id="login-code" inputmode="numeric" autocomplete="one-time-code" maxlength="20" required></label><button class="btn primary" type="submit"'+(authBusy?' disabled':'')+'>'+(authBusy?'Sjekker …':'Logg inn')+'</button></form><p class="note"><button class="linkbtn" data-act="resend">Send ny kode</button> · <button class="linkbtn" data-act="other-email">Bruk en annen e-post</button></p>'+(authMsg?'<p class="note msg">'+esc(authMsg)+'</p>':'');
+    else if(screen==='newpass'){
+      h+='<h2>Velg nytt passord</h2><form id="newpass-form" class="authform"><label>Nytt passord (minst 8 tegn)<input type="password" id="new-pw" autocomplete="new-password" minlength="8" required></label><button class="btn primary" type="submit"'+(authBusy?' disabled':'')+'>Lagre passord</button></form>'+(authMsg?'<p class="note msg">'+esc(authMsg)+'</p>':'');
     }
     else{
-      h+='<h2>Logg inn</h2><p class="lead">Planleggingen er bare for Sverre, Frida og Marie. Skriv inn e-postadressen din, så får du en kode på e-post.</p><form id="login-form" class="authform"><label>E-post<input type="email" id="login-email" autocomplete="email" required value="'+esc(pendingEmail)+'"></label><button class="btn primary" type="submit"'+(authBusy?' disabled':'')+'>'+(authBusy?'Sender kode …':'Send kode')+'</button></form><p class="note"><button class="linkbtn" data-act="have-code">Har du allerede fått en kode?</button></p>'+(authMsg?'<p class="note msg">'+esc(authMsg)+'</p>':'');
+      h+='<h2>Logg inn</h2><p class="lead">Planleggingen er bare for Sverre, Frida og Marie.</p><form id="login-form" class="authform"><label>E-post<input type="email" id="login-email" autocomplete="username" required value="'+esc(pendingEmail)+'"></label><label>Passord<input type="password" id="login-pw" autocomplete="current-password" required></label><button class="btn primary" type="submit"'+(authBusy?' disabled':'')+'>'+(authBusy?'Logger inn …':'Logg inn')+'</button></form><p class="note"><button class="linkbtn" data-act="forgot">Glemt passord?</button></p>'+(authMsg?'<p class="note msg">'+esc(authMsg)+'</p>':'');
     }
     h+='</div></div>';
     var app=document.getElementById('app');
     var em=document.getElementById('login-email'),ev=em&&em.value;
     app.innerHTML=h;
     var em2=document.getElementById('login-email');if(em2&&ev)em2.value=ev;
-    var cd=document.getElementById('login-code');if(cd&&!authBusy)cd.focus();
   }
   document.addEventListener('submit',function(e){
     e.preventDefault();
-    if(e.target.id==='login-form')sendCode();
-    if(e.target.id==='code-form')verifyCode();
+    if(e.target.id==='login-form')login();
+    if(e.target.id==='newpass-form')setNewPassword();
+    if(e.target.id==='pw-change')changePassword();
   });
   var pendingEmail='';
   try{pendingEmail=localStorage.getItem('tunet-camper-email')||''}catch(x){}
-  async function sendCode(resend){
-    var em=resend?pendingEmail:((document.getElementById('login-email')||{}).value||'');
-    em=em.trim().toLowerCase();
-    if(!em){authMsg='Skriv inn e-postadressen din.';render();return}
-    authBusy=true;authMsg='';pendingEmail=em;render();
-    try{localStorage.setItem('tunet-camper-email',em)}catch(x){}
-    var ok=await sb.rpc('camp_login_allowed',{p_email:em});
-    if(ok.error){authBusy=false;authMsg='Fikk ikke kontakt med serveren. Prøv igjen.';render();return}
-    if(!ok.data){authBusy=false;authMsg='Denne e-postadressen har ikke tilgang. Be Sverre om å legge deg til.';render();return}
-    var r=await sb.auth.signInWithOtp({email:em,options:{shouldCreateUser:true}});
-    authBusy=false;
-    if(r.error){
-      authMsg=/email rate limit|over_email/i.test(r.error.message+' '+(r.error.code||''))?'Grensen for antall e-poster per time er nådd, så det ble ikke sendt noen kode. Prøv igjen om en stund (opptil en time). Har du en kode fra før som ikke er brukt, kan du bruke den.':/rate|limit|seconds/i.test(r.error.message)?'Du har nettopp bedt om en kode. Vent ett minutt før du ber om en ny.':(/signup|not allowed/i.test(r.error.message)?'Kontoen din er ikke opprettet ennå. Be Sverre om å opprette den i Supabase.':'Kunne ikke sende kode: '+r.error.message);
-      if(resend){screen='code'}render();return;
-    }
-    try{localStorage.setItem('tunet-camper-code-sent',String(Date.now()))}catch(x){}
-    screen='code';authMsg=resend?'Ny kode er sendt.':'';render();
-    var c=document.getElementById('login-code');if(c)c.focus();
+  var pwMsg='';
+  function friendly(err){
+    var m=(err&&err.message)||'',c=(err&&err.code)||'';
+    if(/invalid login|invalid_credentials/i.test(m+' '+c))return 'Feil e-post eller passord.';
+    if(/email not confirmed/i.test(m))return 'Kontoen er ikke bekreftet. Be Sverre huke av «Auto Confirm» for brukeren i Supabase.';
+    if(/email rate limit|over_email/i.test(m+' '+c))return 'Grensen for antall e-poster per time er nådd. Prøv igjen om en stund, eller be Sverre sette et nytt passord for deg i Supabase.';
+    if(/rate|seconds/i.test(m))return 'Vent ett minutt og prøv igjen.';
+    if(/weak|short|at least/i.test(m))return 'Passordet er for svakt. Bruk minst 8 tegn.';
+    if(/same/i.test(m))return 'Det nye passordet må være forskjellig fra det gamle.';
+    return m||'Noe gikk galt. Prøv igjen.';
   }
-  async function verifyCode(){
-    var code=((document.getElementById('login-code')||{}).value||'').replace(/\D/g,'');
-    if(code.length<6){authMsg='Koden har minst 6 siffer.';render();return}
+  async function login(){
+    var em=((document.getElementById('login-email')||{}).value||'').trim().toLowerCase(), pw=(document.getElementById('login-pw')||{}).value||'';
+    if(!em||!pw){authMsg='Fyll inn e-post og passord.';render();return}
+    pendingEmail=em;try{localStorage.setItem('tunet-camper-email',em)}catch(x){}
     authBusy=true;authMsg='';render();
-    var r=await sb.auth.verifyOtp({email:pendingEmail,token:code,type:'email'});
+    var r=await sb.auth.signInWithPassword({email:em,password:pw});
     authBusy=false;
-    if(r.error){authMsg=/expired|invalid/i.test(r.error.message)?'Koden er feil eller utløpt. Prøv igjen, eller be om en ny kode.':'Innloggingen feilet: '+r.error.message;render();return}
+    if(r.error){authMsg=friendly(r.error);render();var p2=document.getElementById('login-pw');if(p2)p2.focus();return}
     session=r.data.session;await boot();
+  }
+  async function forgot(){
+    var em=((document.getElementById('login-email')||{}).value||pendingEmail||'').trim().toLowerCase();
+    if(!em){authMsg='Skriv inn e-postadressen din først, og trykk så «Glemt passord?».';render();return}
+    pendingEmail=em;
+    var ok=await sb.rpc('camp_login_allowed',{p_email:em});
+    if(!ok.error&&!ok.data){authMsg='Denne e-postadressen har ikke tilgang. Be Sverre om å legge deg til.';render();return}
+    var r=await sb.auth.resetPasswordForEmail(em,{redirectTo:location.origin+location.pathname});
+    authMsg=r.error?friendly(r.error):'Vi har sendt en e-post med lenke for å velge nytt passord. Sjekk også søppelpost.';
+    render();
+  }
+  async function setNewPassword(){
+    var pw=(document.getElementById('new-pw')||{}).value||'';
+    if(pw.length<8){authMsg='Passordet må ha minst 8 tegn.';render();return}
+    authBusy=true;render();
+    var r=await sb.auth.updateUser({password:pw});
+    authBusy=false;
+    if(r.error){authMsg=friendly(r.error);render();return}
+    authMsg='';recovering=false;history.replaceState(null,'',location.pathname);await boot();
+  }
+  async function changePassword(){
+    var el=document.getElementById('new-pw');var pw=el&&el.value||'';
+    if(pw.length<8){pwMsg='Passordet må ha minst 8 tegn.';render();return}
+    var r=await sb.auth.updateUser({password:pw});
+    pwMsg=r.error?friendly(r.error):'Passordet er byttet.';
+    render();
   }
   async function logout(){
     if(state&&saved&&dirty()){clearTimeout(saveTimer);await save()}
@@ -734,11 +754,8 @@ footer.foot{display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-betw
   // ---------- data ----------
   async function boot(){
     var s=await sb.auth.getSession();session=s.data.session;
-    if(!session){
-      var sentAt=0;try{sentAt=+localStorage.getItem('tunet-camper-code-sent')||0}catch(x){}
-      screen=(pendingEmail&&Date.now()-sentAt<3600000)?'code':'login';render();return;
-    }
-    try{localStorage.removeItem('tunet-camper-code-sent')}catch(x){}
+    if(!session){screen='login';render();return}
+    if(recovering){screen='newpass';render();return}
     userEmail=(session.user.email||'').toLowerCase();
     screen='loading';render();
     var mem=await sb.from('camp_members').select('email,navn');
@@ -881,7 +898,9 @@ footer.foot{display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-betw
   document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&screen==='app'&&state)resync()});
 
   window.addEventListener('beforeunload',function(e){if(state&&saved&&(dirty()||saving)){e.preventDefault();e.returnValue=''}});
+  var recovering=/type=recovery/.test(location.hash);
   sb.auth.onAuthStateChange(function(evt,sess){
+    if(evt==='PASSWORD_RECOVERY'){recovering=true;session=sess;screen='newpass';authMsg='';render();return}
     if(evt==='SIGNED_OUT'&&screen==='app'){screen='login';render()}
   });
   render();

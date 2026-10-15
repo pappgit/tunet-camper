@@ -5,25 +5,19 @@ Nettside for planlegging av Tunet Camper: https://pappgit.github.io/tunet-camper
 Siden ligger på GitHub Pages, og dataene lagres i Supabase-prosjektet **TunetScoreboard** (tabellene `camp_sections` og `camp_members`).
 
 ## Innlogging
-Man skriver inn e-postadressen sin og får en sekssifret kode på e-post. Det finnes ingen passord. Bare e-postadresser som står i `camp_members` får tilsendt kode og kan se planen.
-
-### Engangsoppsett i Supabase
-Authentication → Emails (Email Templates). I malene **Magic Link** og **Confirm signup** bytter du innholdet til:
-
-```html
-<h2>Kode til Tunet Camper</h2>
-<p>Koden din er: <strong style="font-size:24px;letter-spacing:4px">{{ .Token }}</strong></p>
-<p>Skriv den inn på innloggingssiden. Koden er gyldig en kort stund.</p>
-```
-
-Emnelinje, for eksempel: `Kode til Tunet Camper`
+Man logger inn med e-post og passord. Bare e-postadresser som står i `camp_members` får se planen.
 
 ## Legge til en ny person
-Kjør i SQL Editor (e-post med små bokstaver):
-```sql
-insert into public.camp_members(email, navn) values ('frida@eksempel.no', 'Frida');
-```
-Personen kan logge inn med en gang. Kontoen opprettes første gang hen ber om kode.
+1. Supabase → TunetScoreboard → Authentication → Users → **Add user → Create new user**. Skriv inn e-post og et midlertidig passord, og huk av for **Auto Confirm User**.
+2. Legg personen i medlemslisten (Table Editor → `camp_members` → Insert row, eller SQL Editor):
+   ```sql
+   insert into public.camp_members(email, navn) values ('frida@eksempel.no', 'Frida');
+   ```
+   E-posten skrives med små bokstaver.
+3. Gi personen det midlertidige passordet. Hen bytter det selv via navneknappen øverst til høyre → «Bytt passord».
+
+## Glemt passord
+«Glemt passord?» på innloggingssiden sender en e-post med lenke. Supabase sin innebygde e-posttjeneste sender bare noen få e-poster i timen. Går det ikke, kan du sette et nytt passord for personen under Authentication → Users → (personen) → Reset password / Update password.
 
 ## Fjerne tilgang
 ```sql
@@ -34,4 +28,3 @@ delete from public.camp_members where email = 'frida@eksempel.no';
 - `index.html` er hele appen (ingen byggesteg). Den bruker supabase-js fra jsDelivr.
 - Nøkkelen i `index.html` er den offentlige anon-nøkkelen. Den er laget for å være synlig. Tilgangsreglene (RLS) i databasen sørger for at bare medlemmer får lese og skrive.
 - Hver del av planen lagres som én rad i `camp_sections`, med versjonsnummer. Lagrer to personer samme del samtidig, får den siste beskjed og kan velge å overskrive eller hente den andres versjon.
-- Supabase sin innebygde e-posttjeneste har en lav grense for hvor mange e-poster som kan sendes i timen. Innloggingen huskes på enheten, så det trengs sjelden nye koder. Blir det et problem, kan man koble til egen SMTP under Authentication → Emails.
