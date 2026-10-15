@@ -647,7 +647,8 @@ footer.foot{display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-betw
     else if(a==='acct'){acctOpen=!acctOpen}
     else if(a==='logout'){logout();return}
     else if(a==='resend'){sendCode(true);return}
-    else if(a==='other-email'){screen='login';authMsg='';render();return}
+    else if(a==='other-email'){screen='login';authMsg='';try{localStorage.removeItem('tunet-camper-code-sent')}catch(x){}render();return}
+    else if(a==='have-code'){var em=((document.getElementById('login-email')||{}).value||pendingEmail||'').trim().toLowerCase();if(!em){authMsg='Skriv inn e-postadressen du fikk koden til først.';render();return}pendingEmail=em;try{localStorage.setItem('tunet-camper-email',em)}catch(x){}screen='code';authMsg='';render();return}
     else if(a==='retry'){boot();return}
     else if(a==='save'){save();return}
     render();
@@ -675,10 +676,10 @@ footer.foot{display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-betw
     else if(screen==='error'){h+='<h2>Fikk ikke kontakt</h2><p class="lead">'+esc(loadErr||'Kunne ikke hente planen.')+'</p><button class="btn primary" data-act="retry">Prøv igjen</button> <button class="btn" data-act="logout">Logg ut</button>'}
     else if(screen==='denied'){h+='<h2>Ingen tilgang</h2><p class="lead">Du er logget inn som <b>'+esc(userEmail)+'</b>, men denne e-postadressen har ikke tilgang til planen. Be Sverre om å legge deg til.</p><button class="btn" data-act="logout">Logg ut</button>'}
     else if(screen==='code'){
-      h+='<h2>Skriv inn koden</h2><p class="lead">Vi har sendt en kode til <b>'+esc(pendingEmail)+'</b>. Sjekk innboksen, og eventuelt søppelpost.</p><form id="code-form" class="authform"><label>Kode fra e-posten<input type="text" id="login-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="10" required></label><button class="btn primary" type="submit"'+(authBusy?' disabled':'')+'>'+(authBusy?'Sjekker …':'Logg inn')+'</button></form><p class="note"><button class="linkbtn" data-act="resend">Send ny kode</button> · <button class="linkbtn" data-act="other-email">Bruk en annen e-post</button></p>'+(authMsg?'<p class="note msg">'+esc(authMsg)+'</p>':'');
+      h+='<h2>Skriv inn koden</h2><p class="lead">Vi har sendt en kode til <b>'+esc(pendingEmail)+'</b>. Sjekk innboksen, og eventuelt søppelpost.</p><form id="code-form" class="authform"><label>Kode fra e-posten<input type="text" id="login-code" inputmode="numeric" autocomplete="one-time-code" maxlength="20" required></label><button class="btn primary" type="submit"'+(authBusy?' disabled':'')+'>'+(authBusy?'Sjekker …':'Logg inn')+'</button></form><p class="note"><button class="linkbtn" data-act="resend">Send ny kode</button> · <button class="linkbtn" data-act="other-email">Bruk en annen e-post</button></p>'+(authMsg?'<p class="note msg">'+esc(authMsg)+'</p>':'');
     }
     else{
-      h+='<h2>Logg inn</h2><p class="lead">Planleggingen er bare for Sverre, Frida og Marie. Skriv inn e-postadressen din, så får du en kode på e-post.</p><form id="login-form" class="authform"><label>E-post<input type="email" id="login-email" autocomplete="email" required value="'+esc(pendingEmail)+'"></label><button class="btn primary" type="submit"'+(authBusy?' disabled':'')+'>'+(authBusy?'Sender kode …':'Send kode')+'</button></form>'+(authMsg?'<p class="note msg">'+esc(authMsg)+'</p>':'');
+      h+='<h2>Logg inn</h2><p class="lead">Planleggingen er bare for Sverre, Frida og Marie. Skriv inn e-postadressen din, så får du en kode på e-post.</p><form id="login-form" class="authform"><label>E-post<input type="email" id="login-email" autocomplete="email" required value="'+esc(pendingEmail)+'"></label><button class="btn primary" type="submit"'+(authBusy?' disabled':'')+'>'+(authBusy?'Sender kode …':'Send kode')+'</button></form><p class="note"><button class="linkbtn" data-act="have-code">Har du allerede fått en kode?</button></p>'+(authMsg?'<p class="note msg">'+esc(authMsg)+'</p>':'');
     }
     h+='</div></div>';
     var app=document.getElementById('app');
@@ -709,6 +710,7 @@ footer.foot{display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-betw
       authMsg=/rate|limit|seconds/i.test(r.error.message)?'Du har nettopp fått en kode. Vent litt før du ber om en ny.':(/signup|not allowed/i.test(r.error.message)?'Kontoen din er ikke opprettet ennå. Be Sverre om å opprette den i Supabase.':'Kunne ikke sende kode: '+r.error.message);
       if(resend){screen='code'}render();return;
     }
+    try{localStorage.setItem('tunet-camper-code-sent',String(Date.now()))}catch(x){}
     screen='code';authMsg=resend?'Ny kode er sendt.':'';render();
     var c=document.getElementById('login-code');if(c)c.focus();
   }
@@ -732,7 +734,11 @@ footer.foot{display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-betw
   // ---------- data ----------
   async function boot(){
     var s=await sb.auth.getSession();session=s.data.session;
-    if(!session){screen='login';render();return}
+    if(!session){
+      var sentAt=0;try{sentAt=+localStorage.getItem('tunet-camper-code-sent')||0}catch(x){}
+      screen=(pendingEmail&&Date.now()-sentAt<3600000)?'code':'login';render();return;
+    }
+    try{localStorage.removeItem('tunet-camper-code-sent')}catch(x){}
     userEmail=(session.user.email||'').toLowerCase();
     screen='loading';render();
     var mem=await sb.from('camp_members').select('email,navn');
