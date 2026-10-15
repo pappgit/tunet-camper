@@ -1,0 +1,787 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Tunet Camper 2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Saira+Condensed:wght@600;700;800&display=swap">
+<style>
+body{margin:0}
+
+/* Layout: navy kampprogram-band med gul stripe, faktastripe, deretter to kolonner (program + øktfordeling | oppgaver + spørsmål) */
+:root{
+  --navy:#0F2C66; --yellow:#FFC72C; --yellow-ink:#0F2C66;
+  --bg:#F3F5FA; --surface:#FFFFFF; --ink:#0E1A33; --muted:#56637F; --line:#DAE0EC; --soft:#E9EEF7;
+  --band:#0F2C66; --on-band:#FFFFFF; --on-band-muted:#B9C6E4;
+  --accent:#0F2C66; --focus:#2A62D6;
+  --g1-bg:#0F2C66; --g1-fg:#FFFFFF; --g2-bg:#FFC72C; --g2-fg:#0F2C66; --g3-bg:#CFDDFA; --g3-fg:#0F2C66;
+  --ok:#1E7F47; --ok-bg:#E2F3E9; --warn:#9A6200; --warn-bg:#FFF2CC; --bad:#B3261E; --bad-bg:#FBE4E2;
+  --f-display:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Figtree",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#08122B; --surface:#0F1D40; --ink:#E9EFFC; --muted:#9DAACA; --line:#22335E; --soft:#16264F;
+  --band:#0B1D47; --on-band:#FFFFFF; --on-band-muted:#9FB1DA; --accent:#FFC72C; --focus:#8FB2FF;
+  --g1-bg:#3D63B8; --g1-fg:#FFFFFF; --g3-bg:#2A3F6E; --g3-fg:#E9EFFC;
+  --ok:#6FD39B; --ok-bg:#12352A; --warn:#F2C25B; --warn-bg:#3A2F10; --bad:#FF8A80; --bad-bg:#3E1A1A;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#08122B; --surface:#0F1D40; --ink:#E9EFFC; --muted:#9DAACA; --line:#22335E; --soft:#16264F;
+  --band:#0B1D47; --on-band:#FFFFFF; --on-band-muted:#9FB1DA; --accent:#FFC72C; --focus:#8FB2FF;
+  --g1-bg:#3D63B8; --g1-fg:#FFFFFF; --g3-bg:#2A3F6E; --g3-fg:#E9EFFC;
+  --ok:#6FD39B; --ok-bg:#12352A; --warn:#F2C25B; --warn-bg:#3A2F10; --bad:#FF8A80; --bad-bg:#3E1A1A;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.05}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+
+/* band */
+.band{background:var(--band);color:var(--on-band);border-bottom:6px solid var(--yellow)}
+.band .wrap{padding-block:28px 24px;display:grid;gap:18px}
+.top{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between}
+.eyebrow{font-family:var(--f-display);font-weight:700;letter-spacing:.14em;text-transform:uppercase;font-size:13px;color:var(--yellow)}
+.band h1{font-size:clamp(40px,7vw,68px);font-weight:800;letter-spacing:.01em;text-transform:uppercase}
+.band h1 span{color:var(--yellow)}
+.count{display:flex;align-items:baseline;gap:8px;background:var(--yellow);color:var(--yellow-ink);padding:8px 16px;border-radius:4px}
+.count b{font-family:var(--f-display);font-size:40px;font-weight:800;line-height:1}
+.count small{font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.06em}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.14);border-radius:6px;overflow:hidden}
+.fact{background:var(--band);padding:10px 14px;min-width:0}
+.fact .k{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--on-band-muted);font-weight:600}
+.fact .v{font-weight:600;font-size:16px;overflow-wrap:anywhere}
+.band input{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);color:var(--on-band);border-radius:4px;padding:3px 6px;width:100%}
+
+/* toolbar */
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding-block:14px}
+.status{color:var(--muted);font-size:13px}
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:7px 14px;font-weight:600;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--yellow);border-color:var(--yellow);color:var(--yellow-ink)}
+.btn.small{padding:3px 10px;font-size:13px}
+.btn.ghost{border-color:transparent;background:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--bad)}
+.btn[disabled]{opacity:.5;cursor:default}
+
+/* grid */
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:20px;padding-bottom:40px}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.col{display:grid;gap:20px;align-content:start;min-width:0}
+section.card{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px;min-width:0}
+.card h2{font-size:24px;font-weight:700;text-transform:uppercase;letter-spacing:.02em;display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}
+.card h2 .meta{font-family:var(--f-body);font-size:13px;font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted)}
+.card > p.lead{color:var(--muted);margin:6px 0 14px;font-size:14px;max-width:65ch}
+
+/* program */
+.prog{list-style:none;margin:12px 0 0;padding:0;display:grid}
+.prog li{display:grid;grid-template-columns:110px minmax(0,1fr) auto;gap:12px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.prog li:first-child{border-top:0}
+.prog .t{font-weight:600;color:var(--muted)}
+.prog li.okt .n{font-family:var(--f-display);font-weight:700;font-size:20px}
+.prog li.okt .t{color:var(--ink)}
+.prog li.pause .n{color:var(--muted)}
+.tag{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--muted);white-space:nowrap}
+.tag.okt{background:var(--yellow);color:var(--yellow-ink)}
+.prog .edit-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.prog input.time{width:70px}
+@media (max-width:480px){.prog li{grid-template-columns:90px minmax(0,1fr)}.prog li .tag{display:none}}
+
+/* rotation */
+.rot-wrap{overflow-x:auto;margin-top:12px}
+table.rot{border-collapse:separate;border-spacing:6px;width:100%;min-width:560px;margin:-6px}
+.rot td{vertical-align:top}
+.rot th{font-family:var(--f-display);font-weight:700;font-size:16px;text-transform:uppercase;text-align:left;padding:2px 4px;color:var(--muted)}
+.rot th.row{white-space:nowrap}
+.rot th.row b{display:block;color:var(--ink);font-size:20px}
+.rot th.row small{font-family:var(--f-body);font-weight:500;font-size:12px;text-transform:none}
+.cell{border-radius:6px;padding:10px 12px;min-height:62px;display:grid;gap:2px;align-content:center;position:relative;overflow:hidden}
+.cell .g{font-weight:700;font-size:15px}
+.cell .a{font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:600;opacity:.85}
+.cell.fys{background-image:repeating-linear-gradient(135deg,transparent 0 8px,rgba(255,255,255,.14) 8px 16px)}
+.g1{background:var(--g1-bg);color:var(--g1-fg)} .g2{background:var(--g2-bg);color:var(--g2-fg)} .g3{background:var(--g3-bg);color:var(--g3-fg)}
+.g0{background:var(--soft);color:var(--muted)}
+.card .cell select{width:100%;background:#FFFFFF;color:#0E1A33;border:0;border-radius:4px;padding:3px 4px;font-size:13px;color-scheme:light}
+.checks{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.check{font-size:13px;font-weight:600;padding:4px 10px;border-radius:999px;display:inline-flex;gap:6px;align-items:center}
+.check.ok{background:var(--ok-bg);color:var(--ok)} .check.bad{background:var(--bad-bg);color:var(--bad)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:10px}
+.sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:5px;background:var(--g1-bg)}
+.sw.fys{background-image:repeating-linear-gradient(135deg,transparent 0 3px,rgba(255,255,255,.45) 3px 6px)}
+
+/* groups */
+.groups{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-top:12px}
+.group{border:1px solid var(--line);border-radius:8px;overflow:hidden;display:grid;grid-template-rows:auto 1fr;min-width:0}
+.group header{padding:10px 14px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.group header h3{font-size:22px;font-weight:800}
+.group header span{font-size:13px;font-weight:600;opacity:.9}
+.group .body{padding:12px 14px;display:grid;gap:8px;align-content:start}
+.bar{height:8px;background:var(--soft);border-radius:999px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:999px}
+.kv{display:flex;justify-content:space-between;gap:8px;font-size:14px}
+.kv span{color:var(--muted)}
+.note{font-size:13px;color:var(--muted)}
+.note.flag{color:var(--warn);background:var(--warn-bg);padding:6px 8px;border-radius:4px}
+.inline-num{width:64px}
+.keeper{margin-top:12px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:14px;align-items:center;padding:12px 14px;border:1px dashed var(--line);border-radius:8px}
+.keeper .big{font-family:var(--f-display);font-weight:800;font-size:38px;line-height:1}
+
+/* tasks */
+.tasks{list-style:none;margin:12px 0 0;padding:0;display:grid}
+.tasks li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}
+.tasks li:first-child{border-top:0}
+.tasks input[type=checkbox]{width:18px;height:18px;margin-top:2px;accent-color:var(--navy)}
+.tasks .txt{min-width:0;overflow-wrap:anywhere}
+.tasks li.done .txt{text-decoration:line-through;color:var(--muted)}
+.who{display:flex;gap:6px;flex-wrap:wrap;margin-top:3px;font-size:12px}
+.who .tag.person{background:var(--soft);color:var(--ink);text-transform:none;letter-spacing:0;font-weight:600}
+.who .tag.none{background:var(--warn-bg);color:var(--warn);text-transform:none;letter-spacing:0}
+.progress{display:flex;align-items:center;gap:10px;margin-top:10px}
+.progress .bar{flex:1}
+.addrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.addrow input{flex:1 1 180px;min-width:0}
+
+/* inputs */
+.card input[type=text],.card input[type=number],.card input[type=date],.card textarea,.card select{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:5px 8px;min-width:0}
+.card textarea{width:100%;min-height:110px;resize:vertical}
+.notes{white-space:pre-wrap;margin-top:10px;max-width:65ch}
+
+/* questions */
+.qs{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:8px}
+.qs li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:start;padding:10px 12px;border-radius:6px;background:var(--warn-bg)}
+.qs li.solved{background:var(--soft)}
+.qs li .mark{font-family:var(--f-display);font-weight:800;font-size:18px;color:var(--warn);line-height:1.2}
+.qs li.solved .mark{color:var(--ok)}
+.qs li.solved .txt{color:var(--muted)}
+.qs .txt{min-width:0;overflow-wrap:anywhere}
+.qs .ans{font-size:13px;color:var(--muted);margin-top:2px}
+
+/* section edit + new bits */
+.card h2 .hd{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.prog.editing li{grid-template-columns:auto minmax(0,1fr) auto}
+.prog.editing .edit-row input[type=text]{flex:1 1 140px}
+.prog input.time{width:auto}
+@media (max-width:480px){.prog.editing li{grid-template-columns:minmax(0,1fr)}}
+.stepper{display:inline-flex;align-items:center;gap:4px}
+.stepper .btn{width:30px;padding:3px 0;font-size:16px;line-height:1}
+.stepper input{width:56px;text-align:center}
+.fill{display:flex;align-items:center;gap:8px}
+.fill .bar{flex:1}
+.bar.full i{background:var(--ok)}
+.pill{font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill.open{background:var(--soft);color:var(--muted)}
+.pill.full{background:var(--ok-bg);color:var(--ok)}
+.note-add{display:grid;gap:8px;margin-top:12px;justify-items:start}
+.card .note-add textarea{min-height:70px}
+.notelist{list-style:none;margin:12px 0 0;padding:0;display:grid}
+.notelist li{display:grid;gap:6px;padding:10px 0;border-top:1px solid var(--line)}
+.notelist li:first-child{border-top:0}
+.notelist .notes{margin-top:0}
+.note-act{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.note-act span{display:inline-flex;gap:4px}
+
+/* groups as rows */
+.groups{grid-template-columns:minmax(0,1fr)!important}
+.group .body{grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 20px;align-items:center}
+.group .body .note,.group .body textarea{grid-column:1/-1}
+.group header{flex-wrap:wrap}
+.kv{flex-wrap:wrap;align-items:center}
+.prog input.time{width:68px;text-align:center}
+/* tasks */
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;align-items:center}
+.filters select,.filters input{flex:1 1 140px;min-width:0}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{border:0;background:var(--surface);padding:5px 12px;font-weight:600;font-size:13px;cursor:pointer;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--navy);color:#fff}
+.seg button span{opacity:.7;margin-left:2px}
+.card .filters input[type=search]{background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:5px 8px}
+.who{align-items:center}
+.added{color:var(--muted);font-size:12px}
+.linkbtn{border:0;background:none;padding:0;color:var(--accent);font-weight:600;font-size:12px;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.tasks .ttl{display:block}
+.tact{display:flex;flex-direction:column;gap:4px;align-items:flex-end}
+.tedit{display:grid;gap:8px}
+.tedit label{display:grid;gap:3px;font-size:12px;font-weight:600;color:var(--muted)}
+.tedit label input{font-size:14px;font-weight:400;color:var(--ink)}
+.trow{display:flex;gap:8px;flex-wrap:wrap}
+.trow label{flex:1 1 140px}
+.comments{margin-top:8px;padding:8px 10px;border-left:3px solid var(--yellow);background:var(--bg);border-radius:0 6px 6px 0;display:grid;gap:8px}
+.cmt{display:grid;gap:2px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.cmt .notes{font-size:14px}
+.cadd{display:flex;gap:6px;flex-wrap:wrap}
+.cadd input{flex:1 1 160px}
+.task-add input{flex:1 1 120px}
+.task-add #new-task{flex:3 1 180px}
+
+/* facts edit + trainers */
+.factbar{display:flex;justify-content:flex-end}
+.btn.onband{background:transparent;color:var(--on-band);border-color:rgba(255,255,255,.4)}
+.btn.onband:hover{border-color:var(--yellow);color:var(--yellow)}
+.band input{color-scheme:dark}
+.fact .unset{color:var(--on-band-muted);font-weight:500}
+.trn{margin-top:6px;padding:6px 8px 8px;border:1px solid var(--line);border-radius:6px;background:var(--surface);display:grid;gap:4px}
+.trn-h{display:flex;justify-content:space-between;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.tline{font-size:13px;font-weight:500;border-bottom:1px solid var(--line);padding:2px 0;min-height:22px;overflow-wrap:anywhere}
+.tline.empty{border-bottom-style:dashed}
+.trn input{width:100%;font-size:13px;padding:3px 6px;background:var(--bg);border:1px solid var(--line);border-radius:4px;min-width:0}
+
+/* multi-day */
+.when-edit{display:grid;gap:6px}
+.when-n,.when-d{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px;align-items:center;font-size:12px;font-weight:600;color:var(--on-band-muted)}
+.when-n input{width:60px}
+.facts:has(.when-edit) .fact:first-child{grid-column:span 2}
+.when-d input{min-width:140px}
+.when-line{display:block}
+.when-sub{display:block;font-size:12px;font-weight:500;color:var(--on-band-muted)}
+
+/* save bar */
+.savebar{position:sticky;bottom:0;background:var(--band);color:var(--on-band);border-top:4px solid var(--yellow);padding-bottom:env(safe-area-inset-bottom,0px)}
+.savebar .wrap{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-block:10px}
+.savebar .btn{background:transparent;color:var(--on-band);border-color:rgba(255,255,255,.35)}
+.savebar .btn.primary{background:var(--yellow);color:var(--yellow-ink);border-color:var(--yellow)}
+.banner{background:var(--warn-bg);color:var(--warn);border-radius:6px;padding:10px 14px;display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
+footer.foot{color:var(--muted);font-size:12px;padding-bottom:28px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* site: auth + account */
+.auth{max-width:440px;margin:32px auto 48px;display:grid;gap:12px}
+.auth,.acct{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px}
+.auth h2{font-size:28px;text-transform:uppercase}
+.authform{display:grid;gap:12px}
+.authform label{display:grid;gap:4px;font-size:13px;font-weight:600;color:var(--muted)}
+.card .authform input{font-size:16px;padding:9px 10px;background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--ink)}
+.authform .btn{justify-self:start;padding:9px 18px}
+.auth .msg{color:var(--warn)}
+.band h1 span{color:var(--yellow)}
+.acct{display:grid;gap:10px;margin-bottom:16px;max-width:520px;margin-left:auto}
+.acct-pw{display:flex;gap:8px;flex-wrap:wrap}
+.card .acct-pw input{flex:1 1 200px;background:var(--bg);border:1px solid var(--line);border-radius:5px;padding:5px 8px;color:var(--ink)}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+(function(){
+  var SB_URL='https://daagydnxzemzwtwypqwl.supabase.co';
+  var SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhYWd5ZG54emVtend0d3lwcXdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwMjQxMDQsImV4cCI6MjA5ODYwMDEwNH0.VJjTkiTH6jC5vUW40tHhfJSnlCHAMwC5XP-kH-A-nEY';
+  var KEYS=['meta','flater','program','grupper','keepere','rotasjon','oppgaver','sporsmal','notater'];
+  var LABEL={meta:'Info',flater:'Flater',program:'Dagsprogram',grupper:'Grupper',keepere:'Keepere',rotasjon:'Øktfordeling',oppgaver:'Oppgaver',sporsmal:'Åpne spørsmål',notater:'Notater'};
+  var sb=window.supabase.createClient(SB_URL,SB_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  var screen='loading', session=null, userEmail='', members={}, versions={}, rowInfo={}, authMsg='', authBusy=false, channel=null, acctOpen=false, loadErr='';
+  var FONTS_UNUSED='<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Saira+Condensed:wght@600;700;800&display=swap">';
+  var saved=null, state=null;
+  var editing=false, canEdit=false, art=null, saving=false, msg='', draft=null, ed={}, noteEdit=null, taskEdit=null, openTasks={}, filt={status:'alle',who:'',q:''};
+  try{var fs=JSON.parse(localStorage.getItem('tunet-camper-filter')||'null');if(fs)filt=Object.assign(filt,fs)}catch(e){}
+  function saveFilt(){try{localStorage.setItem('tunet-camper-filter',JSON.stringify(filt))}catch(e){}}
+  function todayIso(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+  function migrate(s){
+    if(typeof s.notater==='string')s.notater=s.notater?[{id:'n1',tekst:s.notater,dato:''}]:[];
+    if(!Array.isArray(s.notater))s.notater=[];
+    (s.grupper||[]).forEach(function(g){if(g.maks==null||g.maks==='')g.maks=20});
+    if(s.meta&&s.meta.trenere==null)s.meta.trenere='';
+    if(s.meta&&(!Array.isArray(s.meta.dager)||!s.meta.dager.length))s.meta.dager=[s.meta.dato||''];
+    if(s.meta)s.meta.dato=s.meta.dager[0]||'';
+    (s.rotasjon||[]).forEach(function(row){row.forEach(function(c){if(!Array.isArray(c.t))c.t=[];while(c.t.length<4)c.t.push('')})});
+    (s.oppgaver||[]).forEach(function(t){if(!t.opprettet)t.opprettet='';if(!Array.isArray(t.kommentarer))t.kommentarer=[]});
+    return s;
+  }
+
+  function isE(sec){return canEdit&&(editing||!!ed[sec])}
+  function secBtn(sec){if(!canEdit||editing)return '';return '<button class="btn small" id="sec-'+sec+'" data-act="sec" data-s="'+sec+'">'+(ed[sec]?'Ferdig':'Endre')+'</button>'}
+  function sortProgram(){state.program.sort(function(a,b){return String(a.fra).localeCompare(String(b.fra))})}
+  function addMin(t,m){var x=/^(\d{1,2}):(\d{2})$/.exec(t||'');if(!x)return '';var v=(+x[1])*60+(+x[2])+m;v=Math.min(v,23*60+59);return ('0'+Math.floor(v/60)).slice(-2)+':'+('0'+v%60).slice(-2)}
+
+  function clone(o){return JSON.parse(JSON.stringify(o))}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function dirty(){return JSON.stringify(state)!==JSON.stringify(saved)}
+  function uid(p){return p+Math.random().toString(36).slice(2,8)}
+  function getPath(p){return p.split('.').reduce(function(o,k){return o==null?o:o[k]},state)}
+  function setPath(p,v){var ks=p.split('.'),o=state;for(var i=0;i<ks.length-1;i++)o=o[ks[i]];o[ks[ks.length-1]]=v}
+
+
+  var MONTHS=['januar','februar','mars','april','mai','juni','juli','august','september','oktober','november','desember'];
+  var DAYS=['søndag','mandag','tirsdag','onsdag','torsdag','fredag','lørdag'];
+  function parseDate(s){var m=/^(\d{4})-(\d{2})-(\d{2})$/.exec(s||'');return m?new Date(+m[1],+m[2]-1,+m[3]):null}
+  function fmtDate(s){var d=parseDate(s);if(!d)return s||'Ikke satt';return DAYS[d.getDay()]+' '+d.getDate()+'. '+MONTHS[d.getMonth()]+' '+d.getFullYear()}
+  function daysLeft(s){var d=parseDate(s);if(!d)return null;var t=new Date();t=new Date(t.getFullYear(),t.getMonth(),t.getDate());return Math.round((d-t)/86400000)}
+
+  function inp(path,type,cls,extra){var v=getPath(path);return '<input type="'+(type||'text')+'" id="f-'+path.replace(/\./g,'-')+'" data-path="'+path+'"'+(type==='number'?' data-num="1" min="0"':'')+' class="'+(cls||'')+'" value="'+esc(v==null?'':v)+'"'+(extra||'')+'>'}
+
+  function oktItems(){return state.program.filter(function(p){return p.type==='okt'})}
+  function newCell(){return {g:-1,a:'innebandy',t:['','','','']}}
+  function ensureRot(){var n=oktItems().length,f=state.flater.length;while(state.rotasjon.length<n)state.rotasjon.push([]);
+    state.rotasjon.forEach(function(row){while(row.length<f)row.push(newCell());if(row.length>f)row.length=f;row.forEach(function(c){if(!Array.isArray(c.t))c.t=[];while(c.t.length<4)c.t.push('')})});}
+  function setFlater(n){n=Math.max(1,Math.min(6,parseInt(n,10)||1));while(state.flater.length<n)state.flater.push('Flate '+(state.flater.length+1));state.flater.length=n;ensureRot()}
+
+  function rotChecks(){
+    var n=Math.min(oktItems().length,state.rotasjon.length);
+    return state.grupper.map(function(g,gi){
+      var inn=0,fys=0,dbl=false;
+      for(var r=0;r<n;r++){var c=0;state.rotasjon[r].forEach(function(cell){if(cell.g===gi){c++;cell.a==='fys'?fys++:inn++}});if(c>1)dbl=true}
+      var ok=inn===2&&fys===1&&!dbl;
+      return {navn:g.navn,inn:inn,fys:fys,dbl:dbl,ok:ok};
+    });
+  }
+
+  function render(){
+    if(screen!=='app'){renderAuth();return}
+    renderApp();
+  }
+  function renderApp(){
+    ensureRot();
+    var m=state.meta, E=isE('info');
+    m.dato=m.dager[0]||'';
+    var dl=daysLeft(m.dato), dlast=daysLeft(m.dager[m.dager.length-1]);
+    var h='';
+    // band
+    h+='<div class="band"><div class="wrap"><div class="top"><div><div class="eyebrow">Tunet innebandy · '+(E?inp('meta.sesong'):esc(m.sesong))+'</div><h1>'+(E?inp('meta.tittel'):esc(m.tittel).replace(/(\S+)$/,'<span>$1</span>'))+'</h1></div>';
+    if(dl!=null)h+='<div class="count num"><b>'+(dl>=0?dl:0)+'</b><small>'+(dl>0?'dager igjen':(dlast!=null&&dlast>=0)?'i dag!':'gjennomført')+'</small></div>';
+    h+='</div><div class="facts">';
+    h+=fact('Når',whenFact(E));
+    h+=fact('Hvor',E?inp('meta.sted'):esc(m.sted));
+    h+=fact('Tid',E?inp('meta.tid'):esc(m.tid));
+    h+=fact('Flater',E?'<input type="number" id="f-flater" data-flater="1" min="1" max="6" value="'+state.flater.length+'" aria-label="Antall flater">':state.flater.length+' flater · '+state.grupper.length+' grupper');
+    h+=fact('Ansvar på banen',E?inp('meta.ansvarBane','text','',' list="ppl"'):esc(m.ansvarBane||'Ikke satt'));
+    h+=fact('Ansvar drift/rigg',E?inp('meta.ansvarDrift','text','',' list="ppl"'):esc(m.ansvarDrift||'Ikke satt'));
+    h+=fact('Trenere',E?inp('meta.trenere','text','',' placeholder="Navn, skilt med komma"'):(m.trenere?esc(m.trenere):'<span class="unset">Ikke satt</span>'));
+    h+='</div>';
+    if(canEdit&&!editing)h+='<div class="factbar"><button class="btn small onband" id="sec-info" data-act="sec" data-s="info">'+(ed.info?'Ferdig':'Endre info')+'</button></div>';
+    h+='</div></div>';
+
+    // toolbar
+    h+='<div class="wrap"><div class="toolbar"><div class="status">'+statusText()+'</div><div style="display:flex;gap:8px;flex-wrap:wrap">';
+    if(canEdit)h+='<button class="btn'+(E?' primary':'')+'" id="b-edit" data-act="toggle-edit">'+(E?'Ferdig med redigering':'Rediger plan')+'</button>';
+    h+='<button class="btn" id="b-acct" data-act="acct" aria-expanded="'+acctOpen+'">'+esc(memberName(userEmail))+'</button>';
+    h+='</div></div>';
+    if(acctOpen)h+=acctPanel();
+
+    h+='<div class="grid"><div class="col">';
+    h+=programCard(isE('program'))+rotCard(isE('rot'))+groupsCard(isE('grupper'));
+    h+='</div><div class="col">';
+    h+=notesCard()+tasksCard(isE('oppgaver'))+questionsCard(isE('sporsmal'));
+    h+='</div></div>';
+    h+='<footer class="foot">Tunet Camper · planlegging'+lastSavedText()+'</footer></div>';
+
+    if(dirty()&&canEdit)h+='<div class="savebar"><div class="wrap"><span>'+(saving?'Lagrer …':esc(msg||'Du har ulagrede endringer.'))+'</span><span style="display:flex;gap:8px"><button class="btn" data-act="discard"'+(saving?' disabled':'')+'>Forkast</button><button class="btn primary" data-act="save"'+(saving?' disabled':'')+'>Lagre</button></span></div></div>';
+
+    h+='<datalist id="ppl">'+people().map(function(p){return '<option value="'+esc(p)+'">'}).join('')+'</datalist>';
+    var app=document.getElementById('app');
+    var act=document.activeElement, aid=act&&act.id, s0=act&&act.selectionStart, s1=act&&act.selectionEnd;
+    app.innerHTML=h;
+    if(aid){var el=document.getElementById(aid);if(el){el.focus();try{if(s0!=null)el.setSelectionRange(s0,s1)}catch(e){}}}
+  }
+
+  function statusText(){
+    if(!canEdit)return 'Planen vises i lesemodus.';
+    if(msg&&dirty())return esc(msg);
+    if(msg&&!dirty())return esc(msg);
+    return editing?'Redigerer alt. Trykk «Lagre» når du er ferdig.':'Trykk «Endre» på en seksjon, eller «Rediger plan» for å endre alt. Påmeldte, notater og oppgaver kan endres direkte.';
+  }
+  function fmtShort(s){var d=parseDate(s);if(!d)return s||'Dato ikke satt';return DAYS[d.getDay()].slice(0,3)+' '+d.getDate()+'. '+MONTHS[d.getMonth()].slice(0,3)}
+  function whenFact(E){
+    var ds=state.meta.dager;
+    if(E){
+      var h='<div class="when-edit"><label class="when-n">Antall dager <input type="number" id="f-days" data-days="1" min="1" max="7" value="'+ds.length+'"></label>';
+      ds.forEach(function(d,k){h+='<label class="when-d"><span>Dag '+(k+1)+'</span>'+inp('meta.dager.'+k,'date','',' aria-label="Dato dag '+(k+1)+'"')+'</label>'});
+      return h+'</div>';
+    }
+    if(ds.length===1)return esc(fmtDate(ds[0]));
+    var yr=(parseDate(ds[ds.length-1])||parseDate(ds[0])||{getFullYear:function(){return ''}}).getFullYear();
+    return '<span class="when-sub">'+ds.length+' dager</span>'+ds.map(function(d,k){return '<span class="when-line">'+esc(fmtShort(d))+'</span>'}).join('')+(yr?'<span class="when-sub">'+yr+'</span>':'');
+  }
+  function nextIso(s){var d=parseDate(s);if(!d)return '';d.setDate(d.getDate()+1);return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+  function setDays(n){n=Math.max(1,Math.min(7,parseInt(n,10)||1));var ds=state.meta.dager;while(ds.length<n)ds.push(nextIso(ds[ds.length-1]));ds.length=n}
+  function fact(k,v){return '<div class="fact"><div class="k">'+k+'</div><div class="v num">'+v+'</div></div>'}
+
+  function programCard(E){
+    var h='<section class="card"><h2>Dagsprogram <span class="hd"><span class="meta num">'+esc(state.program[0]?state.program[0].fra:'')+'–'+esc(state.program.length?state.program[state.program.length-1].til:'')+'</span>'+secBtn('program')+'</span></h2>';
+    if(E)h+='<p class="lead">Endre tider og innhold, eller legg til nye punkter. Punktene sorteres etter starttid når du trykker «Ferdig».</p>';
+    h+='<ul class="prog'+(E?' editing':'')+'">';
+    state.program.forEach(function(p,i){
+      var label={okt:'Økt',pause:'Pause',felles:'Felles'}[p.type]||p.type;
+      if(E){
+        h+='<li class="'+p.type+'"><span class="edit-row">'+inp('program.'+i+'.fra','text','time num',' inputmode="numeric" placeholder="tt:mm" maxlength="5" aria-label="Fra"')+'<span aria-hidden="true">–</span>'+inp('program.'+i+'.til','text','time num',' inputmode="numeric" placeholder="tt:mm" maxlength="5" aria-label="Til"')+'</span><span class="edit-row">'+inp('program.'+i+'.navn','text','',' placeholder="Hva skjer?"')+'<select id="f-program-'+i+'-type" data-path="program.'+i+'.type">'+['felles','okt','pause'].map(function(t){return '<option value="'+t+'"'+(p.type===t?' selected':'')+'>'+({okt:'Økt',pause:'Pause',felles:'Felles'}[t])+'</option>'}).join('')+'</select></span><button class="btn ghost small" data-act="del-prog" data-i="'+i+'" aria-label="Fjern">Fjern</button></li>';
+      }else{
+        h+='<li class="'+p.type+'"><span class="t num">'+esc(p.fra)+'–'+esc(p.til)+'</span><span class="n">'+esc(p.navn)+'</span><span class="tag '+p.type+'">'+label+'</span></li>';
+      }
+    });
+    h+='</ul>';
+    if(E)h+='<div class="addrow"><button class="btn small primary" data-act="add-prog">+ Legg til punkt</button></div>';
+    return h+'</section>';
+  }
+
+  function rotCard(E){
+    var okts=oktItems();
+    var h='<section class="card"><h2>Øktfordeling <span class="hd"><span class="meta">'+state.flater.length+' flater · '+okts.length+' økter</span>'+secBtn('rot')+'</span></h2><p class="lead">Alle grupper skal ha 2 innebandyøkter og 1 fysøkt. Hver rad er én økt, hver kolonne én flate. Under hver økt er det plass til 4 trenere.</p><div class="rot-wrap"><table class="rot"><thead><tr><th></th>';
+    state.flater.forEach(function(f,fi){h+='<th>'+(E?inp('flater.'+fi):esc(f))+'</th>'});
+    h+='</tr></thead><tbody>';
+    okts.forEach(function(o,r){
+      var row=state.rotasjon[r];
+      h+='<tr><th class="row"><b>'+esc(o.navn)+'</b><small class="num">'+esc(o.fra)+'–'+esc(o.til)+'</small></th>';
+      state.flater.forEach(function(f,fi){
+        var c=row[fi]||{g:-1,a:'innebandy'};
+        var g=state.grupper[c.g];
+        var cls=g?'g'+(c.g+1):'g0';
+        h+='<td><div class="cell '+cls+(c.a==='fys'?' fys':'')+'">';
+        if(E){
+          h+='<select id="rot-'+r+'-'+fi+'-g" data-rot="'+r+'.'+fi+'.g" aria-label="Gruppe"><option value="-1">Ledig</option>'+state.grupper.map(function(gg,gi){return '<option value="'+gi+'"'+(gi===c.g?' selected':'')+'>'+esc(gg.navn)+' ('+esc(gg.kull)+')</option>'}).join('')+'</select>';
+          h+='<select id="rot-'+r+'-'+fi+'-a" data-rot="'+r+'.'+fi+'.a" aria-label="Aktivitet"><option value="innebandy"'+(c.a==='innebandy'?' selected':'')+'>Innebandy</option><option value="fys"'+(c.a==='fys'?' selected':'')+'>Fys</option></select>';
+        }else if(g){
+          h+='<span class="g">'+esc(g.navn)+' · '+esc(g.kull)+'</span><span class="a">'+(c.a==='fys'?'Fysøkt':'Innebandy')+'</span>';
+        }else h+='<span class="a">Ledig</span>';
+        h+='</div><div class="trn">';
+        var filled=c.t.filter(function(x){return x&&x.trim()}).length;
+        h+='<div class="trn-h"><span>Trenere</span><span class="num">'+filled+'/4</span></div>';
+        c.t.forEach(function(name,k){
+          if(E)h+='<input type="text" id="rot-'+r+'-'+fi+'-t'+k+'" data-rott="'+r+'.'+fi+'.'+k+'" list="ppl" value="'+esc(name)+'" placeholder="Trener '+(k+1)+'" aria-label="'+esc(o.navn)+', '+esc(state.flater[fi])+', trener '+(k+1)+'">';
+          else h+='<div class="tline'+(name?'':' empty')+'">'+(name?esc(name):'&nbsp;')+'</div>';
+        });
+        h+='</div></td>';
+      });
+      h+='</tr>';
+    });
+    h+='</tbody></table></div><div class="checks">';
+    rotChecks().forEach(function(c){
+      h+='<span class="check '+(c.ok?'ok':'bad')+'">'+(c.ok?'✓':'!')+' '+esc(c.navn)+': '+c.inn+' innebandy · '+c.fys+' fys'+(c.dbl?' · dobbeltbooket':'')+'</span>';
+    });
+    h+='</div><div class="legend"><span><i class="sw"></i>Innebandy</span><span><i class="sw fys"></i>Fysøkt (stripet)</span></div></section>';
+    return h;
+  }
+
+  function groupsCard(E){
+    var tot=state.grupper.reduce(function(a,g){return a+(+g.pameldt||0)},0);
+    var totMax=state.grupper.reduce(function(a,g){return a+(+g.maks||0)},0);
+    var h='<section class="card"><h2>Grupper <span class="hd"><span class="meta num">'+tot+' av '+totMax+' plasser</span>'+secBtn('grupper')+'</span></h2><div class="groups">';
+    state.grupper.forEach(function(g,i){
+      var max=+g.maks||0, p=+g.pameldt||0, pct=max?Math.min(100,Math.round(p/max*100)):0, full=max&&p>=max;
+      h+='<div class="group"><header class="g'+(i+1)+'"><h3>'+(E?inp('grupper.'+i+'.kull'):esc(g.kull))+'</h3><span>'+(E?inp('grupper.'+i+'.navn'):esc(g.navn))+'</span></header><div class="body">';
+      if(canEdit){
+        h+='<div class="kv"><span>Påmeldte</span><span class="stepper"><button class="btn small" data-act="dec" data-i="'+i+'" aria-label="Én færre"'+(p<=0?' disabled':'')+'>−</button>'+inp('grupper.'+i+'.pameldt','number','inline-num num',' aria-label="Påmeldte '+esc(g.kull)+'"'+(max?' max="'+max+'"':''))+'<button class="btn small" data-act="inc" data-i="'+i+'" aria-label="Én til"'+(full?' disabled':'')+'>+</button></span></div>';
+      }else{
+        h+='<div class="kv"><span>Påmeldte</span><b class="num">'+p+(max?' / '+max:'')+'</b></div>';
+      }
+      h+='<div class="kv"><span>Maks plasser</span>'+(E?inp('grupper.'+i+'.maks','number','inline-num num'):'<b class="num">'+(max||'Ikke satt')+'</b>')+'</div>';
+      if(max)h+='<div class="fill"><div class="bar'+(full?' full':'')+'" role="img" aria-label="'+pct+' prosent fullt"><i style="width:'+pct+'%"></i></div><span class="pill '+(full?'full':'open')+' num">'+(full?'Fullt':(max-p)+' ledige')+'</span></div>';
+      h+=E?'<textarea id="f-grupper-'+i+'-merknad" data-path="grupper.'+i+'.merknad" style="min-height:70px">'+esc(g.merknad)+'</textarea>':'<div class="note'+(g.flagg?' flag':'')+'">'+esc(g.merknad)+'</div>';
+      h+='</div></div>';
+    });
+    h+='</div>';
+    var need=state.rotasjon.length?state.rotasjon[0].filter(function(c){return c.a==='innebandy'}).length*2:4;
+    var k=state.keepere;
+    h+='<div class="keeper"><div class="big num">'+(+k.pameldt||0)+' / '+need+'</div><div><b>Keepere</b> '+(E?inp('keepere.pameldt','number','inline-num num'):'')+'<div class="note">'+(E?'<textarea id="f-keepere-merknad" data-path="keepere.merknad" style="min-height:60px">'+esc(k.merknad)+'</textarea>':esc(k.merknad))+'</div></div></div>';
+    return h+'</section>';
+  }
+
+  function people(){
+    var set={};
+    function add(v){String(v||'').split(/\s+og\s+|,\s*|\s*&\s*/).forEach(function(n){n=n.trim();if(n)set[n]=1})}
+    add(state.meta.ansvarBane);add(state.meta.ansvarDrift);add(state.meta.trenere);
+    state.rotasjon.forEach(function(row){row.forEach(function(c){(c.t||[]).forEach(add)})});
+    state.oppgaver.forEach(function(t){add(t.ansvar)});
+    return Object.keys(set).sort(function(a,b){return a.localeCompare(b,'nb')});
+  }
+  function taskMatch(t){
+    if(filt.status==='apne'&&t.ferdig)return false;
+    if(filt.status==='ferdige'&&!t.ferdig)return false;
+    if(filt.who==='__none'){if(t.ansvar)return false}
+    else if(filt.who){var re=new RegExp('(^|\\s|,)'+filt.who.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'($|\\s|,)','i');if(!re.test(t.ansvar||''))return false}
+    if(filt.q){var q=filt.q.toLowerCase();var hay=(t.tekst+' '+t.ansvar+' '+t.kommentarer.map(function(c){return c.tekst}).join(' ')).toLowerCase();if(hay.indexOf(q)<0)return false}
+    return true;
+  }
+  function tasksCard(E){
+    var all=state.oppgaver, done=all.filter(function(t){return t.ferdig}).length, n=all.length, pct=n?Math.round(done/n*100):0;
+    var ppl=people();
+    var h='<section class="card"><h2>Oppgaver <span class="hd"><span class="meta num">'+done+' av '+n+' ferdig</span></span></h2><div class="progress"><div class="bar"><i style="width:'+pct+'%"></i></div><span class="num" style="font-size:13px;color:var(--muted)">'+pct+' %</span></div>';
+    // filter
+    var cnt={alle:n,apne:n-done,ferdige:done};
+    h+='<div class="filters"><div class="seg" role="group" aria-label="Status">';
+    [['alle','Alle'],['apne','Åpne'],['ferdige','Ferdige']].forEach(function(o){h+='<button class="'+(filt.status===o[0]?'on':'')+'" data-act="filt-status" data-v="'+o[0]+'" aria-pressed="'+(filt.status===o[0])+'">'+o[1]+' <span class="num">'+cnt[o[0]]+'</span></button>'});
+    h+='</div><select id="filt-who" data-filter="who" aria-label="Ansvarlig"><option value="">Alle ansvarlige</option>'+ppl.map(function(p){return '<option value="'+esc(p)+'"'+(filt.who===p?' selected':'')+'>'+esc(p)+'</option>'}).join('')+'<option value="__none"'+(filt.who==='__none'?' selected':'')+'>Mangler ansvarlig</option></select>';
+    h+='<input type="search" id="filt-q" data-filter="q" placeholder="Søk i oppgaver" value="'+esc(filt.q)+'" aria-label="Søk i oppgaver"></div>';
+    var shown=0;
+    h+='<ul class="tasks">';
+    all.forEach(function(t,i){
+      if(!taskMatch(t))return; shown++;
+      var editingThis=canEdit&&(E||taskEdit===t.id), open=!!openTasks[t.id]||editingThis, nc=t.kommentarer.length;
+      h+='<li class="'+(t.ferdig?'done':'')+'"><input type="checkbox" id="task-'+t.id+'" data-task="'+i+'"'+(t.ferdig?' checked':'')+(canEdit?'':' disabled')+' aria-label="Ferdig">';
+      h+='<div class="txt">';
+      if(editingThis){
+        h+='<div class="tedit"><label>Oppgave'+inp('oppgaver.'+i+'.tekst')+'</label><div class="trow"><label>Ansvarlig'+inp('oppgaver.'+i+'.ansvar','text','',' list="ppl" placeholder="Velg eller skriv navn"')+'</label><label>Frist'+inp('oppgaver.'+i+'.frist','date')+'</label></div></div>';
+      }else{
+        h+='<span class="ttl">'+esc(t.tekst)+'</span>';
+      }
+      h+='<div class="who">'+(editingThis?'':(t.ansvar?'<span class="tag person">'+esc(t.ansvar)+'</span>':'<span class="tag none">Mangler ansvarlig</span>'))+(t.frist&&!editingThis?'<span class="tag num">Frist '+esc(shortDate(t.frist))+'</span>':'')+(t.opprettet?'<span class="added num">Lagt inn '+esc(shortDate(t.opprettet))+'</span>':'')+'<button class="linkbtn" data-act="toggle-task" data-id="'+esc(t.id)+'" aria-expanded="'+open+'">'+(nc?nc+' kommentar'+(nc===1?'':'er'):(canEdit?'Kommenter':''))+'</button></div>';
+      if(open){
+        h+='<div class="comments">';
+        t.kommentarer.forEach(function(c,ci){h+='<div class="cmt"><div class="notes">'+esc(c.tekst)+'</div><div class="note-act"><span class="note num">'+esc(c.dato)+'</span>'+(canEdit?'<button class="btn ghost small" data-act="del-cmt" data-i="'+i+'" data-c="'+ci+'">Slett</button>':'')+'</div></div>'});
+        if(!nc&&!canEdit)h+='<p class="note">Ingen kommentarer.</p>';
+        if(canEdit)h+='<div class="cadd"><input type="text" id="c-new-'+esc(t.id)+'" data-cnew="'+i+'" placeholder="Skriv en kommentar"><button class="btn small" data-act="add-cmt" data-i="'+i+'">Legg til</button></div>';
+        h+='</div>';
+      }
+      h+='</div>';
+      if(canEdit){
+        h+='<div class="tact">'+(E?'':'<button class="btn small" data-act="task-edit" data-id="'+esc(t.id)+'">'+(taskEdit===t.id?'Ferdig':'Endre')+'</button>')+(editingThis?'<button class="btn ghost small" data-act="del-task" data-i="'+i+'">Slett</button>':'')+'</div>';
+      }else h+='<span></span>';
+      h+='</li>';
+    });
+    h+='</ul>';
+    if(!shown)h+='<p class="note" style="margin-top:12px">Ingen oppgaver passer filteret. <button class="linkbtn" data-act="filt-reset">Vis alle</button></p>';
+    if(canEdit)h+='<div class="addrow task-add"><input type="text" id="new-task" placeholder="Ny oppgave" aria-label="Ny oppgave"><input type="text" id="new-task-who" list="ppl" placeholder="Ansvarlig" aria-label="Ansvarlig"><button class="btn small primary" data-act="add-task">+ Legg til</button></div>';
+    return h+'</section>';
+  }
+  function shortDate(s){var d=parseDate(s);return d?d.getDate()+'. '+MONTHS[d.getMonth()].slice(0,3):s}
+
+  function questionsCard(E){
+    var open=state.sporsmal.filter(function(q){return !q.lost}).length;
+    var h='<section class="card"><h2>Åpne spørsmål <span class="hd"><span class="meta num">'+open+' uavklart</span>'+secBtn('sporsmal')+'</span></h2><ul class="qs">';
+    state.sporsmal.forEach(function(q,i){
+      h+='<li class="'+(q.lost?'solved':'')+'"><span class="mark">'+(q.lost?'✓':'?')+'</span>';
+      if(E){
+        h+='<div class="txt" style="display:grid;gap:6px">'+inp('sporsmal.'+i+'.tekst')+inp('sporsmal.'+i+'.svar','text','',' placeholder="Svar / beslutning"')+'<label style="font-size:13px;display:flex;gap:6px;align-items:center"><input type="checkbox" id="q-'+q.id+'" data-q="'+i+'"'+(q.lost?' checked':'')+'> Avklart</label></div><button class="btn ghost small" data-act="del-q" data-i="'+i+'">Fjern</button>';
+      }else{
+        h+='<div class="txt">'+esc(q.tekst)+(q.svar?'<div class="ans">Svar: '+esc(q.svar)+'</div>':'')+'</div><span></span>';
+      }
+      h+='</li>';
+    });
+    h+='</ul>';
+    if(E)h+='<div class="addrow"><input type="text" id="new-q" placeholder="Nytt spørsmål"><button class="btn small" data-act="add-q">Legg til</button></div>';
+    return h+'</section>';
+  }
+
+  function notesCard(){
+    var ns=state.notater;
+    var h='<section class="card"><h2>Notater <span class="hd"><span class="meta num">'+ns.length+' notat'+(ns.length===1?'':'er')+'</span></span></h2>';
+    if(canEdit)h+='<div class="note-add"><textarea id="new-note" placeholder="Skriv et nytt notat …" aria-label="Nytt notat"></textarea><button class="btn small primary" data-act="add-note">+ Legg til notat</button></div>';
+    if(!ns.length)h+='<p class="note" style="margin-top:12px">Ingen notater ennå.</p>';
+    h+='<ul class="notelist">';
+    ns.forEach(function(n,i){
+      var editingThis=canEdit&&(editing||noteEdit===n.id);
+      h+='<li>';
+      if(editingThis){
+        h+='<textarea id="f-notater-'+i+'-tekst" data-path="notater.'+i+'.tekst">'+esc(n.tekst)+'</textarea><div class="note-act">'+(editing?'':'<button class="btn small" data-act="note-done">Ferdig</button>')+'<button class="btn ghost small" data-act="del-note" data-i="'+i+'">Slett</button></div>';
+      }else{
+        h+='<div class="notes">'+esc(n.tekst)+'</div><div class="note-act">'+(n.dato?'<span class="note num">'+esc(n.dato)+'</span>':'<span></span>')+(canEdit?'<span><button class="btn small" data-act="note-edit" data-id="'+esc(n.id)+'">Endre</button><button class="btn ghost small" data-act="del-note" data-i="'+i+'">Slett</button></span>':'')+'</div>';
+      }
+      h+='</li>';
+    });
+    return h+'</ul></section>';
+  }
+  function addNote(){var el=document.getElementById('new-note');var v=el&&el.value.trim();if(!v)return;state.notater.unshift({id:uid('n'),tekst:v,dato:stamp()});msg='';render()}
+
+  // events
+  function normTime(v){var d=String(v||'').replace(/[^0-9]/g,'');if(!d)return v;if(d.length<=2)d=d+'00';if(d.length===3)d='0'+d;d=d.slice(0,4);var hh=Math.min(23,+d.slice(0,2)),mm=Math.min(59,+d.slice(2));return ('0'+hh).slice(-2)+':'+('0'+mm).slice(-2)}
+  document.addEventListener('focusout',function(e){var t=e.target;if(t.dataset&&t.dataset.path&&/\.(fra|til)$/.test(t.dataset.path)){var v=normTime(t.value);if(v!==t.value){t.value=v;setPath(t.dataset.path,v);softUpdate()}}});
+  document.addEventListener('input',function(e){
+    var t=e.target;
+    if(t.dataset&&t.dataset.days){if(t.value!==''){setDays(t.value);msg='';render()}return}
+    if(t.dataset&&t.dataset.flater){if(t.value!==''){setFlater(t.value);msg='';render()}return}
+    if(t.dataset&&t.dataset.rott){var q=t.dataset.rott.split('.');state.rotasjon[+q[0]][+q[1]].t[+q[2]]=t.value;msg='';softUpdate();return}
+    if(t.dataset&&t.dataset.filter){filt[t.dataset.filter]=t.value;saveFilt();render();return}
+    if(t.dataset.path){var v=t.value;if(t.dataset.num){v=v===''?null:Math.max(0,parseInt(v,10)||0);if(v!=null&&t.max&&v>+t.max)v=+t.max}setPath(t.dataset.path,v);msg='';
+      if(t.tagName==='SELECT'||t.type==='date'||/pameldt$/.test(t.dataset.path))render();else softUpdate();}
+  });
+  document.addEventListener('change',function(e){
+    var t=e.target;
+    if(t.dataset.task!=null){state.oppgaver[+t.dataset.task].ferdig=t.checked;msg='';render();return}
+    if(t.dataset.q!=null){state.sporsmal[+t.dataset.q].lost=t.checked;msg='';render();return}
+    if(t.dataset.rot){var p=t.dataset.rot.split('.');var cell=state.rotasjon[+p[0]][+p[1]];cell[p[2]]=p[2]==='g'?+t.value:t.value;msg='';render();return}
+  });
+  // keep typing smooth: only refresh the save bar without rebuilding inputs
+  var softTimer=null;
+  function softUpdate(){clearTimeout(softTimer);var hasBar=!!document.querySelector('.savebar');if(hasBar!==(dirty()&&canEdit))render();}
+
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Enter'&&(e.target.id==='new-task'||e.target.id==='new-task-who')){e.preventDefault();addTask()}
+    if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.cnew!=null){e.preventDefault();addCmt(+e.target.dataset.cnew)}
+    if(e.key==='Enter'&&e.target.id==='new-q'){e.preventDefault();addQ()}
+  });
+  function addTask(){var el=document.getElementById('new-task'),w=document.getElementById('new-task-who');var v=el&&el.value.trim();if(!v){if(el)el.focus();return}state.oppgaver.push({id:uid('t'),tekst:v,ansvar:(w&&w.value.trim())||'',frist:'',ferdig:false,opprettet:todayIso(),kommentarer:[]});msg='';
+    if(filt.status==='ferdige'||filt.q||filt.who){filt={status:'alle',who:'',q:''};saveFilt()}
+    render();var n=document.getElementById('new-task');if(n)n.focus()}
+  function addCmt(i){var t=state.oppgaver[i];var el=document.getElementById('c-new-'+t.id);var v=el&&el.value.trim();if(!v)return;t.kommentarer.push({id:uid('c'),tekst:v,dato:stamp()});openTasks[t.id]=true;msg='';render();var n=document.getElementById('c-new-'+t.id);if(n)n.focus()}
+  function addQ(){var el=document.getElementById('new-q');var v=el&&el.value.trim();if(!v)return;state.sporsmal.push({id:uid('q'),tekst:v,svar:'',lost:false});render();var n=document.getElementById('new-q');if(n)n.focus()}
+
+  document.addEventListener('click',function(e){
+    var b=e.target.closest('[data-act]');if(!b)return;
+    var a=b.dataset.act,i=+b.dataset.i;
+    if(a==='toggle-edit'){if(editing)sortProgram();editing=!editing;ed={};noteEdit=null;taskEdit=null}
+    else if(a==='sec'){var s=b.dataset.s;if(s==='info')ensureRot();if(ed[s]&&s==='program')sortProgram();ed[s]=!ed[s]}
+    else if(a==='inc'||a==='dec'){var g=state.grupper[i],mx=+g.maks||0,p=(+g.pameldt||0)+(a==='inc'?1:-1);if(p<0)p=0;if(mx&&p>mx)p=mx;g.pameldt=p;msg=''}
+    else if(a==='add-note'){addNote();return}
+    else if(a==='note-edit'){noteEdit=b.dataset.id}
+    else if(a==='note-done'){noteEdit=null}
+    else if(a==='del-note'){state.notater.splice(i,1);noteEdit=null}
+    else if(a==='add-prog'){var last=state.program[state.program.length-1];var f=last?last.til:'';state.program.push({fra:f,til:addMin(f,15),navn:'',type:'felles'});render();var ni=document.getElementById('f-program-'+(state.program.length-1)+'-navn');if(ni)ni.focus();return}
+    else if(a==='del-prog'){state.program.splice(i,1)}
+    else if(a==='add-task'){addTask();return}
+    else if(a==='add-cmt'){addCmt(i);return}
+    else if(a==='del-cmt'){state.oppgaver[i].kommentarer.splice(+b.dataset.c,1);msg=''}
+    else if(a==='toggle-task'){var id=b.dataset.id;openTasks[id]=!openTasks[id]}
+    else if(a==='task-edit'){var tid=b.dataset.id;taskEdit=taskEdit===tid?null:tid;if(taskEdit)openTasks[tid]=true}
+    else if(a==='filt-status'){filt.status=b.dataset.v;saveFilt()}
+    else if(a==='filt-reset'){filt={status:'alle',who:'',q:''};saveFilt()}
+    else if(a==='del-task'){state.oppgaver.splice(i,1);taskEdit=null}
+    else if(a==='add-q'){addQ();return}
+    else if(a==='del-q'){state.sporsmal.splice(i,1)}
+    else if(a==='discard'){state=clone(saved);msg=''}
+    else if(a==='acct'){acctOpen=!acctOpen}
+    else if(a==='logout'){logout();return}
+    else if(a==='setpass'){setPassword();return}
+    else if(a==='login'){login();return}
+    else if(a==='forgot'){forgot();return}
+    else if(a==='retry'){boot();return}
+    else if(a==='save'){save();return}
+    render();
+  });
+
+
+  function memberName(email){var m=members[email];return (m&&m.navn)||email||'Konto'}
+  function lastSavedText(){
+    var best=null;KEYS.forEach(function(k){var r=rowInfo[k];if(r&&r.updated_at&&(!best||r.updated_at>best.updated_at))best=r});
+    if(!best)return '';
+    var d=new Date(best.updated_at);
+    return ' · sist lagret '+d.getDate()+'. '+MONTHS[d.getMonth()]+' kl. '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+(best.updated_by?' av '+esc(memberName(best.updated_by)):'');
+  }
+  function acctPanel(){
+    return '<div class="acct card"><div><b>'+esc(memberName(userEmail))+'</b><div class="note">'+esc(userEmail)+'</div></div>'+
+      '<div class="acct-pw"><input type="password" id="new-pw" autocomplete="new-password" placeholder="Nytt passord (minst 8 tegn)" aria-label="Nytt passord"><button class="btn small" data-act="setpass">Bytt passord</button></div>'+
+      (authMsg?'<div class="note">'+esc(authMsg)+'</div>':'')+
+      '<div><button class="btn small" data-act="logout">Logg ut</button></div></div>';
+  }
+
+  // ---------- auth screens ----------
+  function renderAuth(){
+    var h='<div class="band"><div class="wrap"><div class="eyebrow">Tunet innebandy</div><h1>Tunet <span>Camper</span></h1></div></div><div class="wrap"><div class="auth card">';
+    if(screen==='loading'){h+='<p>Laster planen …</p>'}
+    else if(screen==='error'){h+='<h2>Fikk ikke kontakt</h2><p class="lead">'+esc(loadErr||'Kunne ikke hente planen.')+'</p><button class="btn primary" data-act="retry">Prøv igjen</button> <button class="btn" data-act="logout">Logg ut</button>'}
+    else if(screen==='denied'){h+='<h2>Ingen tilgang</h2><p class="lead">Du er logget inn som <b>'+esc(userEmail)+'</b>, men denne e-postadressen har ikke tilgang til planen. Be Sverre om å legge deg til.</p><button class="btn" data-act="logout">Logg ut</button>'}
+    else if(screen==='newpass'){h+='<h2>Velg nytt passord</h2><form id="pw-form" class="authform"><label>Nytt passord<input type="password" id="new-pw" autocomplete="new-password" minlength="8" required></label><button class="btn primary" data-act="setpass" type="submit"'+(authBusy?' disabled':'')+'>Lagre passord</button></form>'+(authMsg?'<p class="note">'+esc(authMsg)+'</p>':'')}
+    else{
+      h+='<h2>Logg inn</h2><p class="lead">Planleggingen er bare for Sverre, Frida og Marie.</p><form id="login-form" class="authform"><label>E-post<input type="email" id="login-email" autocomplete="username" required></label><label>Passord<input type="password" id="login-pw" autocomplete="current-password" required></label><button class="btn primary" type="submit"'+(authBusy?' disabled':'')+'>'+(authBusy?'Logger inn …':'Logg inn')+'</button></form><p class="note"><button class="linkbtn" data-act="forgot">Glemt passord?</button></p>'+(authMsg?'<p class="note msg">'+esc(authMsg)+'</p>':'');
+    }
+    h+='</div></div>';
+    var app=document.getElementById('app');
+    var em=document.getElementById('login-email'),ev=em&&em.value;
+    app.innerHTML=h;
+    var em2=document.getElementById('login-email');if(em2&&ev)em2.value=ev;
+  }
+  document.addEventListener('submit',function(e){
+    e.preventDefault();
+    if(e.target.id==='login-form')login();
+    if(e.target.id==='pw-form')setPassword();
+  });
+  async function login(){
+    var em=(document.getElementById('login-email')||{}).value||'', pw=(document.getElementById('login-pw')||{}).value||'';
+    if(!em||!pw){authMsg='Fyll inn e-post og passord.';render();return}
+    authBusy=true;authMsg='';render();
+    var r=await sb.auth.signInWithPassword({email:em.trim(),password:pw});
+    authBusy=false;
+    if(r.error){authMsg=r.error.message&&/invalid/i.test(r.error.message)?'Feil e-post eller passord.':'Innloggingen feilet: '+r.error.message;render();return}
+    session=r.data.session;await boot();
+  }
+  async function forgot(){
+    var em=(document.getElementById('login-email')||{}).value||'';
+    if(!em){authMsg='Skriv inn e-postadressen din først, og trykk så «Glemt passord?».';render();return}
+    var r=await sb.auth.resetPasswordForEmail(em.trim(),{redirectTo:location.origin+location.pathname});
+    authMsg=r.error?'Kunne ikke sende e-post: '+r.error.message:'Hvis adressen har en konto, har vi sendt en lenke for å velge nytt passord.';
+    render();
+  }
+  async function setPassword(){
+    var el=document.getElementById('new-pw');var pw=el&&el.value||'';
+    if(pw.length<8){authMsg='Passordet må ha minst 8 tegn.';render();return}
+    authBusy=true;render();
+    var r=await sb.auth.updateUser({password:pw});
+    authBusy=false;
+    authMsg=r.error?'Kunne ikke bytte passord: '+r.error.message:'Passordet er byttet.';
+    if(!r.error&&screen==='newpass'){history.replaceState(null,'',location.pathname);await boot();return}
+    render();
+  }
+  async function logout(){
+    if(dirty()&&screen==='app'&&!window.confirm){} // no-op guard
+    try{if(channel)sb.removeChannel(channel)}catch(x){}
+    channel=null;await sb.auth.signOut();
+    session=null;saved=null;state=null;screen='login';authMsg='';acctOpen=false;render();
+  }
+
+  // ---------- data ----------
+  async function boot(){
+    var s=await sb.auth.getSession();session=s.data.session;
+    if(!session){screen='login';render();return}
+    userEmail=(session.user.email||'').toLowerCase();
+    screen='loading';render();
+    var mem=await sb.from('camp_members').select('email,navn');
+    if(mem.error){screen='error';loadErr=mem.error.message;render();return}
+    members={};(mem.data||[]).forEach(function(m){members[m.email]=m});
+    if(!members[userEmail]){screen='denied';render();return}
+    var res=await sb.from('camp_sections').select('key,data,version,updated_at,updated_by');
+    if(res.error){screen='error';loadErr=res.error.message;render();return}
+    var s0={};versions={};rowInfo={};
+    (res.data||[]).forEach(function(r){s0[r.key]=r.data;versions[r.key]=r.version;rowInfo[r.key]={updated_at:r.updated_at,updated_by:r.updated_by}});
+    KEYS.forEach(function(k){if(s0[k]===undefined){s0[k]=defaults(k);versions[k]=0}});
+    saved=migrate(s0);state=clone(saved);
+    canEdit=true;screen='app';msg='';render();
+    subscribe();
+  }
+  function defaults(k){return {meta:{tittel:'Tunet Camper',sesong:'',dato:'',dager:[''],sted:'',tid:'',ansvarBane:'',ansvarDrift:'',trenere:''},flater:['Flate 1','Flate 2','Flate 3'],program:[],grupper:[],keepere:{pameldt:0,merknad:''},rotasjon:[],oppgaver:[],sporsmal:[],notater:[]}[k]}
+  function subscribe(){
+    if(channel)return;
+    channel=sb.channel('camp-sections').on('postgres_changes',{event:'*',schema:'public',table:'camp_sections'},function(p){
+      var r=p.new;if(!r||!r.key||KEYS.indexOf(r.key)<0)return;
+      if((versions[r.key]||0)>=r.version)return;
+      var mine=JSON.stringify(state[r.key])!==JSON.stringify(saved[r.key]);
+      var tmp={};tmp[r.key]=r.data;
+      saved[r.key]=r.data;versions[r.key]=r.version;rowInfo[r.key]={updated_at:r.updated_at,updated_by:r.updated_by};
+      migrate(Object.assign({},saved));
+      if(!mine){state[r.key]=clone(saved[r.key]);}
+      else msg=memberName(r.updated_by)+' har nettopp lagret «'+LABEL[r.key]+'». Lagrer du nå, overskriver du deres endringer der. Trykk «Forkast» for å se deres versjon.';
+      render();
+    }).subscribe();
+  }
+
+  async function save(){
+    if(saving||!state)return;
+    if(ed.program||editing)sortProgram();
+    var changed=KEYS.filter(function(k){return JSON.stringify(state[k])!==JSON.stringify(saved[k])});
+    if(!changed.length){render();return}
+    saving=true;msg='';render();
+    var conflicts=[],errors=[];
+    for(var i=0;i<changed.length;i++){
+      var k=changed[i], v=versions[k]||0, data=clone(state[k]), r;
+      if(v===0){
+        r=await sb.from('camp_sections').insert({key:k,data:data,version:1}).select('version,updated_at,updated_by');
+      }else{
+        r=await sb.from('camp_sections').update({data:data,version:v+1}).eq('key',k).eq('version',v).select('version,updated_at,updated_by');
+      }
+      if(r.error){errors.push(LABEL[k]);continue}
+      if(!r.data||!r.data.length){
+        var cur=await sb.from('camp_sections').select('data,version,updated_at,updated_by').eq('key',k).single();
+        if(cur.data){saved[k]=cur.data.data;versions[k]=cur.data.version;rowInfo[k]={updated_at:cur.data.updated_at,updated_by:cur.data.updated_by}}
+        conflicts.push(LABEL[k]+(cur.data&&cur.data.updated_by?' ('+memberName(cur.data.updated_by)+')':''));continue;
+      }
+      saved[k]=data;versions[k]=r.data[0].version;rowInfo[k]={updated_at:r.data[0].updated_at,updated_by:r.data[0].updated_by};
+    }
+    saving=false;
+    if(conflicts.length)msg='Noen andre lagret samtidig: '+conflicts.join(', ')+'. Trykk «Lagre» igjen for å bruke din versjon, eller «Forkast» for å se deres.';
+    else if(errors.length)msg='Kunne ikke lagre '+errors.join(', ')+'. Sjekk nettet og prøv igjen.';
+    else msg='Lagret.';
+    render();
+  }
+
+  window.addEventListener('beforeunload',function(e){if(state&&saved&&dirty()){e.preventDefault();e.returnValue=''}});
+  sb.auth.onAuthStateChange(function(evt,sess){
+    if(evt==='PASSWORD_RECOVERY'){session=sess;screen='newpass';authMsg='';render();return}
+    if(evt==='SIGNED_OUT'&&screen==='app'){screen='login';render()}
+  });
+  render();
+  boot().catch(function(e){screen='error';loadErr=String(e&&e.message||e);render()});
+})();
+</script>
+</body>
+</html>
