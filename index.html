@@ -707,7 +707,7 @@ footer.foot{display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-betw
     var r=await sb.auth.signInWithOtp({email:em,options:{shouldCreateUser:true}});
     authBusy=false;
     if(r.error){
-      authMsg=/rate|limit|seconds/i.test(r.error.message)?'Du har nettopp fått en kode. Vent litt før du ber om en ny.':(/signup|not allowed/i.test(r.error.message)?'Kontoen din er ikke opprettet ennå. Be Sverre om å opprette den i Supabase.':'Kunne ikke sende kode: '+r.error.message);
+      authMsg=/email rate limit|over_email/i.test(r.error.message+' '+(r.error.code||''))?'Grensen for antall e-poster per time er nådd, så det ble ikke sendt noen kode. Prøv igjen om en stund (opptil en time). Har du en kode fra før som ikke er brukt, kan du bruke den.':/rate|limit|seconds/i.test(r.error.message)?'Du har nettopp bedt om en kode. Vent ett minutt før du ber om en ny.':(/signup|not allowed/i.test(r.error.message)?'Kontoen din er ikke opprettet ennå. Be Sverre om å opprette den i Supabase.':'Kunne ikke sende kode: '+r.error.message);
       if(resend){screen='code'}render();return;
     }
     try{localStorage.setItem('tunet-camper-code-sent',String(Date.now()))}catch(x){}
