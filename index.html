@@ -249,6 +249,20 @@ table.rot{border-collapse:separate;border-spacing:6px;width:100%;min-width:560px
 footer.foot{color:var(--muted);font-size:12px;padding-bottom:28px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
+/* live: save status, who is online, toast, footer */
+.status{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.savechip{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:var(--ok-bg);color:var(--ok);white-space:nowrap}
+.savechip.pending,.savechip.saving{background:var(--soft);color:var(--muted)}
+.savechip.error{background:var(--bad-bg);color:var(--bad)}
+.online{display:inline-flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.who-on{background:var(--soft);color:var(--ink);font-weight:600;padding:2px 8px;border-radius:999px}
+.who-on::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:5px;vertical-align:1px}
+.hint{font-size:13px;color:var(--muted);flex-basis:100%}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--band);color:var(--on-band);border-left:4px solid var(--yellow);padding:10px 16px;border-radius:6px;font-weight:600;font-size:14px;box-shadow:0 6px 24px rgba(0,0,0,.25);z-index:10;max-width:calc(100% - 32px)}
+footer.foot{display:flex;flex-wrap:wrap;gap:10px 20px;justify-content:space-between;align-items:center;border-top:1px solid var(--line);padding-top:16px;margin-top:8px}
+.foot-user{display:inline-flex;gap:8px;align-items:center;flex-wrap:wrap}
+.foot-user .btn{font-size:14px;padding:6px 16px}
+
 /* site: auth + account */
 .auth{max-width:440px;margin:32px auto 48px;display:grid;gap:12px}
 .auth,.acct{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:18px}
@@ -355,7 +369,7 @@ footer.foot{color:var(--muted);font-size:12px;padding-bottom:28px}
     h+='</div></div>';
 
     // toolbar
-    h+='<div class="wrap"><div class="toolbar"><div class="status">'+statusText()+'</div><div style="display:flex;gap:8px;flex-wrap:wrap">';
+    h+='<div class="wrap"><div class="toolbar"><div class="status"><span id="savechip" class="savechip '+saveState+'">'+saveLabel()+'</span>'+onlineHtml()+'<span class="hint">'+statusText()+'</span></div><div style="display:flex;gap:8px;flex-wrap:wrap">';
     if(canEdit)h+='<button class="btn'+(E?' primary':'')+'" id="b-edit" data-act="toggle-edit">'+(E?'Ferdig med redigering':'Rediger plan')+'</button>';
     h+='<button class="btn" id="b-acct" data-act="acct" aria-expanded="'+acctOpen+'">'+esc(memberName(userEmail))+'</button>';
     h+='</div></div>';
@@ -366,12 +380,13 @@ footer.foot{color:var(--muted);font-size:12px;padding-bottom:28px}
     h+='</div><div class="col">';
     h+=notesCard()+tasksCard(isE('oppgaver'))+questionsCard(isE('sporsmal'));
     h+='</div></div>';
-    h+='<footer class="foot">Tunet Camper · planlegging'+lastSavedText()+'</footer></div>';
+    h+='<footer class="foot"><span>Tunet Camper · planlegging'+lastSavedText()+'</span><span class="foot-user">Innlogget som <b>'+esc(memberName(userEmail))+'</b> ('+esc(userEmail)+') <button class="btn small" data-act="logout">Logg ut</button></span></footer></div>';
 
-    if(dirty()&&canEdit)h+='<div class="savebar"><div class="wrap"><span>'+(saving?'Lagrer …':esc(msg||'Du har ulagrede endringer.'))+'</span><span style="display:flex;gap:8px"><button class="btn" data-act="discard"'+(saving?' disabled':'')+'>Forkast</button><button class="btn primary" data-act="save"'+(saving?' disabled':'')+'>Lagre</button></span></div></div>';
+    h+='<div class="toast" id="toast" role="status" aria-live="polite"'+(toastMsg?'':' hidden')+'>'+esc(toastMsg)+'</div>';
 
     h+='<datalist id="ppl">'+people().map(function(p){return '<option value="'+esc(p)+'">'}).join('')+'</datalist>';
     var app=document.getElementById('app');
+    setTimeout(scheduleSave,0);
     var act=document.activeElement, aid=act&&act.id, s0=act&&act.selectionStart, s1=act&&act.selectionEnd;
     app.innerHTML=h;
     if(aid){var el=document.getElementById(aid);if(el){el.focus();try{if(s0!=null)el.setSelectionRange(s0,s1)}catch(e){}}}
@@ -379,9 +394,8 @@ footer.foot{color:var(--muted);font-size:12px;padding-bottom:28px}
 
   function statusText(){
     if(!canEdit)return 'Planen vises i lesemodus.';
-    if(msg&&dirty())return esc(msg);
     if(msg&&!dirty())return esc(msg);
-    return editing?'Redigerer alt. Trykk «Lagre» når du er ferdig.':'Trykk «Endre» på en seksjon, eller «Rediger plan» for å endre alt. Påmeldte, notater og oppgaver kan endres direkte.';
+    return editing?'Du redigerer alt. Endringer lagres automatisk.':'Alle kan endre alt. Trykk «Endre» på en del, eller «Rediger plan». Endringer lagres automatisk og vises for de andre med en gang.';
   }
   function fmtShort(s){var d=parseDate(s);if(!d)return s||'Dato ikke satt';return DAYS[d.getDay()].slice(0,3)+' '+d.getDate()+'. '+MONTHS[d.getMonth()].slice(0,3)}
   function whenFact(E){
@@ -516,10 +530,10 @@ footer.foot{color:var(--muted);font-size:12px;padding-bottom:28px}
       }else{
         h+='<span class="ttl">'+esc(t.tekst)+'</span>';
       }
-      h+='<div class="who">'+(editingThis?'':(t.ansvar?'<span class="tag person">'+esc(t.ansvar)+'</span>':'<span class="tag none">Mangler ansvarlig</span>'))+(t.frist&&!editingThis?'<span class="tag num">Frist '+esc(shortDate(t.frist))+'</span>':'')+(t.opprettet?'<span class="added num">Lagt inn '+esc(shortDate(t.opprettet))+'</span>':'')+'<button class="linkbtn" data-act="toggle-task" data-id="'+esc(t.id)+'" aria-expanded="'+open+'">'+(nc?nc+' kommentar'+(nc===1?'':'er'):(canEdit?'Kommenter':''))+'</button></div>';
+      h+='<div class="who">'+(editingThis?'':(t.ansvar?'<span class="tag person">'+esc(t.ansvar)+'</span>':'<span class="tag none">Mangler ansvarlig</span>'))+(t.frist&&!editingThis?'<span class="tag num">Frist '+esc(shortDate(t.frist))+'</span>':'')+(t.opprettet?'<span class="added num">Lagt inn '+esc(shortDate(t.opprettet))+(t.av?' av '+esc(memberName(t.av)):'')+'</span>':'')+'<button class="linkbtn" data-act="toggle-task" data-id="'+esc(t.id)+'" aria-expanded="'+open+'">'+(nc?nc+' kommentar'+(nc===1?'':'er'):(canEdit?'Kommenter':''))+'</button></div>';
       if(open){
         h+='<div class="comments">';
-        t.kommentarer.forEach(function(c,ci){h+='<div class="cmt"><div class="notes">'+esc(c.tekst)+'</div><div class="note-act"><span class="note num">'+esc(c.dato)+'</span>'+(canEdit?'<button class="btn ghost small" data-act="del-cmt" data-i="'+i+'" data-c="'+ci+'">Slett</button>':'')+'</div></div>'});
+        t.kommentarer.forEach(function(c,ci){h+='<div class="cmt"><div class="notes">'+esc(c.tekst)+'</div><div class="note-act"><span class="note num">'+byline(c)+'</span>'+(canEdit?'<button class="btn ghost small" data-act="del-cmt" data-i="'+i+'" data-c="'+ci+'">Slett</button>':'')+'</div></div>'});
         if(!nc&&!canEdit)h+='<p class="note">Ingen kommentarer.</p>';
         if(canEdit)h+='<div class="cadd"><input type="text" id="c-new-'+esc(t.id)+'" data-cnew="'+i+'" placeholder="Skriv en kommentar"><button class="btn small" data-act="add-cmt" data-i="'+i+'">Legg til</button></div>';
         h+='</div>';
@@ -566,13 +580,13 @@ footer.foot{color:var(--muted);font-size:12px;padding-bottom:28px}
       if(editingThis){
         h+='<textarea id="f-notater-'+i+'-tekst" data-path="notater.'+i+'.tekst">'+esc(n.tekst)+'</textarea><div class="note-act">'+(editing?'':'<button class="btn small" data-act="note-done">Ferdig</button>')+'<button class="btn ghost small" data-act="del-note" data-i="'+i+'">Slett</button></div>';
       }else{
-        h+='<div class="notes">'+esc(n.tekst)+'</div><div class="note-act">'+(n.dato?'<span class="note num">'+esc(n.dato)+'</span>':'<span></span>')+(canEdit?'<span><button class="btn small" data-act="note-edit" data-id="'+esc(n.id)+'">Endre</button><button class="btn ghost small" data-act="del-note" data-i="'+i+'">Slett</button></span>':'')+'</div>';
+        h+='<div class="notes">'+esc(n.tekst)+'</div><div class="note-act">'+'<span class="note num">'+byline(n)+'</span>'+(canEdit?'<span><button class="btn small" data-act="note-edit" data-id="'+esc(n.id)+'">Endre</button><button class="btn ghost small" data-act="del-note" data-i="'+i+'">Slett</button></span>':'')+'</div>';
       }
       h+='</li>';
     });
     return h+'</ul></section>';
   }
-  function addNote(){var el=document.getElementById('new-note');var v=el&&el.value.trim();if(!v)return;state.notater.unshift({id:uid('n'),tekst:v,dato:stamp()});msg='';render()}
+  function addNote(){var el=document.getElementById('new-note');var v=el&&el.value.trim();if(!v)return;state.notater.unshift({id:uid('n'),tekst:v,dato:stamp(),av:userEmail});msg='';render()}
 
   // events
   function normTime(v){var d=String(v||'').replace(/[^0-9]/g,'');if(!d)return v;if(d.length<=2)d=d+'00';if(d.length===3)d='0'+d;d=d.slice(0,4);var hh=Math.min(23,+d.slice(0,2)),mm=Math.min(59,+d.slice(2));return ('0'+hh).slice(-2)+':'+('0'+mm).slice(-2)}
@@ -594,18 +608,18 @@ footer.foot{color:var(--muted);font-size:12px;padding-bottom:28px}
   });
   // keep typing smooth: only refresh the save bar without rebuilding inputs
   var softTimer=null;
-  function softUpdate(){clearTimeout(softTimer);var hasBar=!!document.querySelector('.savebar');if(hasBar!==(dirty()&&canEdit))render();}
+  function softUpdate(){scheduleSave()}
 
   document.addEventListener('keydown',function(e){
     if(e.key==='Enter'&&(e.target.id==='new-task'||e.target.id==='new-task-who')){e.preventDefault();addTask()}
     if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.cnew!=null){e.preventDefault();addCmt(+e.target.dataset.cnew)}
     if(e.key==='Enter'&&e.target.id==='new-q'){e.preventDefault();addQ()}
   });
-  function addTask(){var el=document.getElementById('new-task'),w=document.getElementById('new-task-who');var v=el&&el.value.trim();if(!v){if(el)el.focus();return}state.oppgaver.push({id:uid('t'),tekst:v,ansvar:(w&&w.value.trim())||'',frist:'',ferdig:false,opprettet:todayIso(),kommentarer:[]});msg='';
+  function addTask(){var el=document.getElementById('new-task'),w=document.getElementById('new-task-who');var v=el&&el.value.trim();if(!v){if(el)el.focus();return}state.oppgaver.push({id:uid('t'),tekst:v,ansvar:(w&&w.value.trim())||'',frist:'',ferdig:false,opprettet:todayIso(),av:userEmail,kommentarer:[]});msg='';
     if(filt.status==='ferdige'||filt.q||filt.who){filt={status:'alle',who:'',q:''};saveFilt()}
     render();var n=document.getElementById('new-task');if(n)n.focus()}
-  function addCmt(i){var t=state.oppgaver[i];var el=document.getElementById('c-new-'+t.id);var v=el&&el.value.trim();if(!v)return;t.kommentarer.push({id:uid('c'),tekst:v,dato:stamp()});openTasks[t.id]=true;msg='';render();var n=document.getElementById('c-new-'+t.id);if(n)n.focus()}
-  function addQ(){var el=document.getElementById('new-q');var v=el&&el.value.trim();if(!v)return;state.sporsmal.push({id:uid('q'),tekst:v,svar:'',lost:false});render();var n=document.getElementById('new-q');if(n)n.focus()}
+  function addCmt(i){var t=state.oppgaver[i];var el=document.getElementById('c-new-'+t.id);var v=el&&el.value.trim();if(!v)return;t.kommentarer.push({id:uid('c'),tekst:v,dato:stamp(),av:userEmail});openTasks[t.id]=true;msg='';render();var n=document.getElementById('c-new-'+t.id);if(n)n.focus()}
+  function addQ(){var el=document.getElementById('new-q');var v=el&&el.value.trim();if(!v)return;state.sporsmal.push({id:uid('q'),tekst:v,svar:'',lost:false,av:userEmail});render();var n=document.getElementById('new-q');if(n)n.focus()}
 
   document.addEventListener('click',function(e){
     var b=e.target.closest('[data-act]');if(!b)return;
@@ -640,6 +654,8 @@ footer.foot{color:var(--muted);font-size:12px;padding-bottom:28px}
   });
 
 
+  function stamp(){var d=new Date();return d.getDate()+'. '+MONTHS[d.getMonth()]+' '+d.getFullYear()+' kl. '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)}
+  function byline(x){var parts=[];if(x.av)parts.push('<b>'+esc(memberName(x.av))+'</b>');if(x.dato)parts.push(esc(x.dato));return parts.join(' · ')}
   function memberName(email){var m=members[email];return (m&&m.navn)||email||'Konto'}
   function lastSavedText(){
     var best=null;KEYS.forEach(function(k){var r=rowInfo[k];if(r&&r.updated_at&&(!best||r.updated_at>best.updated_at))best=r});
@@ -706,6 +722,8 @@ footer.foot{color:var(--muted);font-size:12px;padding-bottom:28px}
     session=r.data.session;await boot();
   }
   async function logout(){
+    if(state&&saved&&dirty()){clearTimeout(saveTimer);await save()}
+    try{if(channel)channel.untrack()}catch(x){}
     try{if(channel)sb.removeChannel(channel)}catch(x){}
     channel=null;await sb.auth.signOut();
     session=null;saved=null;state=null;screen='login';authMsg='';acctOpen=false;render();
@@ -731,51 +749,132 @@ footer.foot{color:var(--muted);font-size:12px;padding-bottom:28px}
     subscribe();
   }
   function defaults(k){return {meta:{tittel:'Tunet Camper',sesong:'',dato:'',dager:[''],sted:'',tid:'',ansvarBane:'',ansvarDrift:'',trenere:''},flater:['Flate 1','Flate 2','Flate 3'],program:[],grupper:[],keepere:{pameldt:0,merknad:''},rotasjon:[],oppgaver:[],sporsmal:[],notater:[]}[k]}
-  function subscribe(){
-    if(channel)return;
-    channel=sb.channel('camp-sections').on('postgres_changes',{event:'*',schema:'public',table:'camp_sections'},function(p){
-      var r=p.new;if(!r||!r.key||KEYS.indexOf(r.key)<0)return;
-      if((versions[r.key]||0)>=r.version)return;
-      var mine=JSON.stringify(state[r.key])!==JSON.stringify(saved[r.key]);
-      var tmp={};tmp[r.key]=r.data;
-      saved[r.key]=r.data;versions[r.key]=r.version;rowInfo[r.key]={updated_at:r.updated_at,updated_by:r.updated_by};
-      migrate(Object.assign({},saved));
-      if(!mine){state[r.key]=clone(saved[r.key]);}
-      else msg=memberName(r.updated_by)+' har nettopp lagret «'+LABEL[r.key]+'». Lagrer du nå, overskriver du deres endringer der. Trykk «Forkast» for å se deres versjon.';
-      render();
-    }).subscribe();
+  var saveTimer=null, saveState='saved', saveAgain=false, toastMsg='', toastTimer=null, online=[];
+  function saveLabel(){return {saved:'✓ Alt er lagret',pending:'Lagrer …',saving:'Lagrer …',error:'Ikke lagret – sjekk nettet'}[saveState]||''}
+  function updateChip(){var c=document.getElementById('savechip');if(c){c.className='savechip '+saveState;c.textContent=saveLabel()}}
+  function onlineHtml(){
+    var names={};online.forEach(function(e){names[e]=1});
+    var list=Object.keys(names).map(function(e){return '<span class="who-on'+(e===userEmail?' me':'')+'">'+esc(memberName(e))+(e===userEmail?' (deg)':'')+'</span>'});
+    return '<span class="online">'+(list.length?'På nett: '+list.join(''):'')+'</span>';
+  }
+  function showToast(t){toastMsg=t;var el=document.getElementById('toast');if(el){el.textContent=t;el.hidden=false}clearTimeout(toastTimer);toastTimer=setTimeout(function(){toastMsg='';var e2=document.getElementById('toast');if(e2)e2.hidden=true},4000)}
+
+  // Three-way merge: keeps both people's changes where possible.
+  function same(a,b){return JSON.stringify(a)===JSON.stringify(b)}
+  function isObj(x){return !!x&&typeof x==='object'&&!Array.isArray(x)}
+  function hasIds(a){return Array.isArray(a)&&a.every(function(x){return isObj(x)&&x.id!=null})}
+  function merge3(base,mine,theirs){
+    if(same(mine,base))return theirs===undefined?undefined:clone(theirs);
+    if(same(theirs,base)||same(mine,theirs))return mine===undefined?undefined:clone(mine);
+    if(Array.isArray(base)&&Array.isArray(mine)&&Array.isArray(theirs)){
+      if(hasIds(base)&&hasIds(mine)&&hasIds(theirs))return mergeById(base,mine,theirs);
+      if(base.length===mine.length&&mine.length===theirs.length)return mine.map(function(m,i){return merge3(base[i],m,theirs[i])});
+      return clone(mine);
+    }
+    if(isObj(base)&&isObj(mine)&&isObj(theirs)){
+      var out={},keys={};[base,mine,theirs].forEach(function(o){Object.keys(o).forEach(function(k){keys[k]=1})});
+      Object.keys(keys).forEach(function(k){var v=merge3(base[k],mine[k],theirs[k]);if(v!==undefined)out[k]=v});
+      return out;
+    }
+    return mine===undefined?undefined:clone(mine);
+  }
+  function mergeById(base,mine,theirs){
+    function map(a){var m={};a.forEach(function(x){m[x.id]=x});return m}
+    var B=map(base),M=map(mine),T=map(theirs),out=[];
+    theirs.forEach(function(t){
+      var id=t.id;
+      if(M[id])out.push(B[id]?merge3(B[id],M[id],t):clone(M[id]));
+      else if(!B[id])out.push(clone(t));               // added by them
+      else if(!same(t,B[id]))out.push(clone(t));        // I deleted it while they changed it: keep it
+    });
+    mine.forEach(function(m,i){
+      if(B[m.id]||T[m.id])return;                       // only items I added
+      if(i===0)out.unshift(clone(m));else out.push(clone(m));
+    });
+    return out;
   }
 
+  function scheduleSave(){
+    if(!state||!saved||screen!=='app')return;
+    if(!dirty()){if(saveState==='pending'){saveState='saved';updateChip()}return}
+    if(saveState!=='saving'){saveState='pending';updateChip()}
+    clearTimeout(saveTimer);saveTimer=setTimeout(save,700);
+  }
   async function save(){
-    if(saving||!state)return;
-    if(ed.program||editing)sortProgram();
-    var changed=KEYS.filter(function(k){return JSON.stringify(state[k])!==JSON.stringify(saved[k])});
-    if(!changed.length){render();return}
-    saving=true;msg='';render();
-    var conflicts=[],errors=[];
+    if(!state)return;
+    if(saving){saveAgain=true;return}
+    var changed=KEYS.filter(function(k){return !same(state[k],saved[k])});
+    if(!changed.length){saveState='saved';updateChip();return}
+    saving=true;saveState='saving';updateChip();
+    var failed=false,merged=false;
     for(var i=0;i<changed.length;i++){
-      var k=changed[i], v=versions[k]||0, data=clone(state[k]), r;
-      if(v===0){
-        r=await sb.from('camp_sections').insert({key:k,data:data,version:1}).select('version,updated_at,updated_by');
-      }else{
-        r=await sb.from('camp_sections').update({data:data,version:v+1}).eq('key',k).eq('version',v).select('version,updated_at,updated_by');
-      }
-      if(r.error){errors.push(LABEL[k]);continue}
-      if(!r.data||!r.data.length){
+      var k=changed[i];
+      for(var attempt=0;attempt<3;attempt++){
+        var v=versions[k]||0, data=clone(state[k]), r;
+        try{
+          if(v===0)r=await sb.from('camp_sections').insert({key:k,data:data,version:1}).select('version,updated_at,updated_by');
+          else r=await sb.from('camp_sections').update({data:data,version:v+1}).eq('key',k).eq('version',v).select('version,updated_at,updated_by');
+        }catch(e){r={error:e}}
+        if(r.error&&v!==0){failed=true;break}
+        if(!r.error&&r.data&&r.data.length){
+          if((versions[k]||0)<=r.data[0].version){saved[k]=data;versions[k]=r.data[0].version;rowInfo[k]={updated_at:r.data[0].updated_at,updated_by:r.data[0].updated_by}}
+          break;
+        }
+        // Someone else saved first: merge their version with mine and try again.
         var cur=await sb.from('camp_sections').select('data,version,updated_at,updated_by').eq('key',k).single();
-        if(cur.data){saved[k]=cur.data.data;versions[k]=cur.data.version;rowInfo[k]={updated_at:cur.data.updated_at,updated_by:cur.data.updated_by}}
-        conflicts.push(LABEL[k]+(cur.data&&cur.data.updated_by?' ('+memberName(cur.data.updated_by)+')':''));continue;
+        if(cur.error||!cur.data){failed=true;break}
+        state[k]=merge3(saved[k],state[k],cur.data.data);
+        saved[k]=cur.data.data;versions[k]=cur.data.version;rowInfo[k]={updated_at:cur.data.updated_at,updated_by:cur.data.updated_by};
+        merged=true;
       }
-      saved[k]=data;versions[k]=r.data[0].version;rowInfo[k]={updated_at:r.data[0].updated_at,updated_by:r.data[0].updated_by};
     }
     saving=false;
-    if(conflicts.length)msg='Noen andre lagret samtidig: '+conflicts.join(', ')+'. Trykk «Lagre» igjen for å bruke din versjon, eller «Forkast» for å se deres.';
-    else if(errors.length)msg='Kunne ikke lagre '+errors.join(', ')+'. Sjekk nettet og prøv igjen.';
-    else msg='Lagret.';
-    render();
+    saveState=failed?'error':(dirty()?'pending':'saved');
+    if(merged)render();else updateChip();
+    if(failed){clearTimeout(saveTimer);saveTimer=setTimeout(save,5000);return}
+    if(saveAgain||dirty()){saveAgain=false;clearTimeout(saveTimer);saveTimer=setTimeout(save,300)}
   }
 
-  window.addEventListener('beforeunload',function(e){if(state&&saved&&dirty()){e.preventDefault();e.returnValue=''}});
+  function applyRemote(r){
+    if(!r||!r.key||KEYS.indexOf(r.key)<0||!saved)return false;
+    if((versions[r.key]||0)>=r.version)return false;
+    var k=r.key;
+    state[k]=same(state[k],saved[k])?clone(r.data):merge3(saved[k],state[k],r.data);
+    saved[k]=r.data;versions[k]=r.version;rowInfo[k]={updated_at:r.updated_at,updated_by:r.updated_by};
+    migrate(saved);migrate(state);
+    return true;
+  }
+  function subscribe(){
+    if(channel)return;
+    channel=sb.channel('camp-sections',{config:{presence:{key:userEmail}}});
+    channel.on('postgres_changes',{event:'*',schema:'public',table:'camp_sections'},function(p){
+      var r=p.new;
+      if(!applyRemote(r))return;
+      if(r.updated_by&&r.updated_by!==userEmail)showToast(memberName(r.updated_by)+' endret «'+LABEL[r.key]+'»');
+      render();
+    });
+    channel.on('presence',{event:'sync'},function(){
+      online=Object.keys(channel.presenceState());
+      var el=document.querySelector('.online');
+      if(el)el.outerHTML=onlineHtml();
+    });
+    channel.subscribe(function(status){
+      if(status==='SUBSCRIBED'){try{channel.track({email:userEmail,at:Date.now()})}catch(x){}}
+      if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'){
+        showToast('Mistet sanntidsforbindelsen. Kobler til på nytt …');
+        setTimeout(function(){try{sb.removeChannel(channel)}catch(x){}channel=null;resync()},3000);
+      }
+    });
+  }
+  async function resync(){
+    if(screen!=='app'||!saved)return;
+    var res=await sb.from('camp_sections').select('key,data,version,updated_at,updated_by');
+    if(!res.error&&res.data){var any=false;res.data.forEach(function(r){if(applyRemote(r))any=true});if(any)render();scheduleSave()}
+    subscribe();
+  }
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'&&screen==='app'&&state)resync()});
+
+  window.addEventListener('beforeunload',function(e){if(state&&saved&&(dirty()||saving)){e.preventDefault();e.returnValue=''}});
   sb.auth.onAuthStateChange(function(evt,sess){
     if(evt==='SIGNED_OUT'&&screen==='app'){screen='login';render()}
   });
